@@ -3,7 +3,7 @@ name = "gohpygossh"
 # Should match 'setup.py' version number (used for gopy/pybindgen)
 version = "0.0.3"
 description = ""
-authors = ["m00s3c0d3 <m00s3c0d3@users.noreply.github.com>"]
+authors = ["b-long <b-long@users.noreply.github.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
