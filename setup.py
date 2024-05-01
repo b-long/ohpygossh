@@ -6,6 +6,6 @@ setuptools.setup(
     py_modules = ["ohpygossh.gohpygossh"],
     package_data={"ohpygossh": ["*.so"]},
     # Should match 'pyproject.toml' version number
-    version="0.0.2",
+    version="0.0.3",
     include_package_data=True,
 )
