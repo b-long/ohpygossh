@@ -124,7 +124,7 @@ jobs:
 
         - name: Upload to PyPI
           env:
-            TWINE_UPLOAD_URL: https://pypi.org/legacy/
+            TWINE_UPLOAD_URL: https://upload.pypi.org/legacy/
             PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
             PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           run: |
