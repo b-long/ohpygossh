@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "gohpygossh"
+# Should match 'setup.py' version number (used for gopy/pybindgen)
+version = "0.0.2"
+description = ""
+authors = ["m00s3c0d3 <m00s3c0d3@users.noreply.github.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">3.11,<3.12"
+pybindgen = "^0.22.1"
+wheel = "^0.42.0"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

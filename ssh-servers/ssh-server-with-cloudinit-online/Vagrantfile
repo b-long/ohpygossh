@@ -1,0 +1,19 @@
+Vagrant.configure("2") do |config|
+    # config.vm.box = "hashicorp/bionic64"
+    config.vm.box = "ubuntu/jammy64"
+
+    # config.ssh.private_key_path = "#{ENV['HOME']}/.ssh/id_rsa
+    # config.ssh.private_key_path = "/var/folders/r7/srtk3z715s1bqzq2xy0mlsk80000gn/T/multipass-test22228396012/id_rsa_test1941709452"
+    # config.ssh.insert_key = true
+
+    config.vm.network "private_network", ip: "192.168.56.10"
+    # config.vm.network :forwarded_port, guest: 80, host: 4567
+
+    # end
+    config.vm.cloud_init do |cloud_init|
+
+      # With Ubuntu cloud images you have to use cloud_init to get an access
+      cloud_init.content_type = "text/cloud-config"
+      cloud_init.path = "cloud-init-test.yml"
+    end
+  end

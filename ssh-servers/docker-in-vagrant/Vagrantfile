@@ -1,0 +1,29 @@
+Vagrant.configure("2") do |config|
+    config.vm.box_check_update = false
+
+    config.vm.provider :docker do |d|
+       d.build_dir = "."
+       d.remains_running = true
+       d.has_ssh = true
+    #    d.image = "httpd:2.4"
+    #    d.ports = ["80:80"]
+    #    d.cmd = ["tail", "-f", "/dev/null"]
+        # d.cmd = [ "/bin/bash", "-c", "tail -f /dev/null" ]
+    end
+
+    public_key_path = File.join(Dir.pwd, "new_id_rsa.pub")
+    if File.exist?(public_key_path)
+      public_key = IO.read(public_key_path)
+    end
+
+    config.vm.provision :shell, :inline =>  <<-SHELL
+        set -e
+
+        # Add host user's ssh public key to authorized_hosts
+        homedir=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+
+        echo '#{public_key}' >> $homedir/.ssh/authorized_keys
+        chmod 600 $homedir/.ssh/authorized_keys
+SHELL
+
+  end

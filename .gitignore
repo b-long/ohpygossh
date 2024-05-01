@@ -1,0 +1,12 @@
+.venv/
+dist/
+build/
+ohpygossh.egg-info
+myssh
+
+# A simple server, for integration testing SSH
+ssh-server/.vagrant/
+ohpygossh/__pycache__/
+
+# Local state created by 'vagrant'
+**/.vagrant/*
