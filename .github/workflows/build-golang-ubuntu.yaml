@@ -15,8 +15,8 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                go-version: [1.21.x]
-        # go-version: [ '1.19', '1.20', '1.21.x' ]
+                go-version: [1.22.x]
+                # go-version: [ '1.19', '1.20', '1.22.x' ]
 
         steps:
             - uses: actions/checkout@v4
@@ -127,7 +127,7 @@ jobs:
             - name: Test Python wheel
               run: |
                   # Test wheel installation
-                  pip install dist/ohpygossh-0.0.3-py3-none-any.whl
+                  pip install dist/ohpygossh-0.0.4-py3-none-any.whl
 
                   # DISABLED: Need to figure out Ubuntu nested VM
                   # Test wheel functionality
