@@ -30,7 +30,7 @@ fi
 source .venv/bin/activate
 
 # Prove that the wheel can be installed
-pip install dist/ohpygossh-0.0.3-py3-none-any.whl
+pip install dist/ohpygossh-0.0.4-py3-none-any.whl
 
 # Validate functionality
 python validate_ohpygossh.py
