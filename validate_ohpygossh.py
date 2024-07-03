@@ -120,7 +120,7 @@ vagrant status && echo "That's the status"
                 commands=f"""
 
 echo "Testing generated keypair"
-echo "Performing authenticaton as 'vagrant' user"
+echo "Performing authentication as 'vagrant' user"
 
 ssh -o StrictHostKeyChecking=no -i {keys.PrivKeyAbsPath} vagrant@{ssh_hostname} -p {ssh_port} 'echo "We did it!"'
 
@@ -132,7 +132,7 @@ ssh -o StrictHostKeyChecking=no -i {keys.PrivKeyAbsPath} vagrant@{ssh_hostname} 
 #                 commands=f"""
 
 # echo "Testing generated keypair"
-# echo "Performing authenticaton as '{keys_only_user}' user"
+# echo "Performing authentication as '{keys_only_user}' user"
 
 # ssh -i {keys.PrivKeyAbsPath} {keys_only_user}@{ssh_hostname} -p {ssh_port} -c 'echo "We did it!"'
 
