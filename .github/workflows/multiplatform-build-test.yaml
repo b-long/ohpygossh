@@ -19,7 +19,7 @@ jobs:
   build_macos:
     permissions:
       contents: write
-      
+
     strategy:
         fail-fast: true
         matrix:
@@ -27,7 +27,7 @@ jobs:
           go-version: [ 1.22.x ]
           python3_version: [ 11 ]
           # go-version: [ '1.19', '1.20', '1.22.x' ]
-        
+
     runs-on: macos-${{ matrix.os_version }}
     steps:
         - uses: actions/checkout@v4
@@ -69,9 +69,6 @@ jobs:
               echo '$HOME/'
               ls -la "$HOME/"
 
-              echo '$HOME/.local/'
-              ls -la "$HOME/.local/"
-
               echo '$HOME/go/'
               ls -la "$HOME/go/"
 
@@ -107,18 +104,21 @@ jobs:
               # Test wheel functionality
               python3 validate_ohpygossh.py
 
+              # Name properly
+              mv dist/ohpygossh-0.0.5-py3-none-any.whl dist/ohpygossh-0.0.5-none-any-manylinux2014_x86_64.whl
+
         - name: Upload artifacts
           uses: actions/upload-artifact@v4
           with:
             # name: wheels-macos${{ matrix.os_version }}-py3${{ matrix.python3_version }}-${{ matrix.arch_cibw_go[0] }}
             name: wheels-macos${{ matrix.os_version }}-py3${{ matrix.python3_version }}-x86_64
-            path: ./wheelhouse/*.whl
-      
+            path: ./dist/*.whl
+
   build_linux_x86_64:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     permissions:
       contents: write
-    
+
     strategy:
       fail-fast: true
       matrix:
@@ -138,7 +138,7 @@ jobs:
           docker --version
           docker ps
           vagrant --version
-      
+
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
@@ -162,9 +162,6 @@ jobs:
             # Look for go/bin (skip, we know it exists)
             echo '$HOME/'
             ls -la "$HOME/"
-
-            echo '$HOME/.local/'
-            ls -la "$HOME/.local/"
 
             echo '$HOME/go/'
             ls -la "$HOME/go/"
@@ -199,7 +196,10 @@ jobs:
             pip install dist/ohpygossh-0.0.5-py3-none-any.whl
 
             # Test wheel functionality
-            python3 validate_ohpygossh.py            
+            python3 validate_ohpygossh.py
+
+            # Name properly
+            mv dist/ohpygossh-0.0.5-py3-none-any.whl dist/ohpygossh-0.0.5-none-any-macosx_11_0_x86_64.whl
 
 
 
@@ -207,7 +207,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: wheels-linux-amd64
-          path: ./wheelhouse/*.whl
+          path: ./dist/*.whl
 
   release:
     needs: [build_macos, build_linux_x86_64]
@@ -220,11 +220,11 @@ jobs:
 
         - name: Collect all wheels
           run: |
-            ls -R
+            # ls -R
             mkdir dist
             for f in $(find . -type f -name '*.whl'); do mv ${f} dist; done;
             ls -R dist
-  
+
         - name: Store version
           run: |
               pip install poetry
