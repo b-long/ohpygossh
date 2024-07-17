@@ -98,7 +98,7 @@ jobs:
         - name: Test Python wheel
           run: |
               # Test wheel installation
-              pip install dist/ohpygossh-0.0.4-py3-none-any.whl
+              pip install dist/ohpygossh-0.0.5-py3-none-any.whl
 
               # Test wheel functionality
               python3 validate_ohpygossh.py
