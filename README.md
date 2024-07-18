@@ -30,7 +30,7 @@ and/or cause debate without offerinig solutions.
 ## Build wheel
 
 The following steps should produce a wheel,
-located at `dist/ohpygossh-0.0.6-py3-none-any.whl`
+located at `dist/ohpygossh-0.0.7-py3-none-any.whl`
 
 ```bash
 ./make_and_validate_script.sh
