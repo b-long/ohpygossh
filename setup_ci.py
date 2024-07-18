@@ -67,7 +67,7 @@ class CustomBuildExt(build_ext):
 
 
 setuptools.setup(
-    name=normalize(PACKAGE_NAME),
+    name="ohpygossh",
     version="0.0.7",
     author="b-long",
     description="A project to create a new cross-platform SSH wheel for Python.",
