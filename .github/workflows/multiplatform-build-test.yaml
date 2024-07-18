@@ -208,6 +208,8 @@ jobs:
           path: ./dist/*.whl
 
   release:
+    permissions:
+      contents: write
     needs: [build_macos, build_linux_x86_64]
     runs-on: ubuntu-latest
     # if: github.ref == 'refs/heads/main'
