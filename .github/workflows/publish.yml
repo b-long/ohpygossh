@@ -24,7 +24,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os_version: [ 12 ]
+        os_version: [ 13 ]
         python3_version: [ 11 ]
         arch_cibw_go:
           - [ "x86_64", "amd64" ]
