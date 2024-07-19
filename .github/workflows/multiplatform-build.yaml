@@ -6,7 +6,7 @@ name: Multiplatform -- Build Python wheel using golang's gopy
 on:
   push:
       branches:
-          - develop
+          - main
 
 defaults:
   run:
@@ -237,9 +237,9 @@ jobs:
 
         - name: Upload to PyPI
           env:
-            TWINE_UPLOAD_URL: https://test.pypi.org/legacy/
-            PYPI_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
-            PYPI_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
+            TWINE_UPLOAD_URL: https://upload.pypi.org/legacy/
+            PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+            PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
           run: |
             twine upload --password "$PYPI_PASSWORD" --user "$PYPI_USERNAME" --repository-url "$TWINE_UPLOAD_URL" dist/*
 
