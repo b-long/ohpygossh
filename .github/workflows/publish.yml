@@ -49,7 +49,7 @@ jobs:
 
       - name: install python 3.${{ matrix.python3_version }}
         run: |
-          brew install python@3.${{ matrix.python3_version }}
+          brew install --force --overwrite python@3.${{ matrix.python3_version }}
           ln -s /usr/local/opt/python@3.${{ matrix.python3_version }}/bin/python3.${{ matrix.python3_version }}  /usr/local/bin/python_for_build
           /usr/local/bin/python_for_build --version
 
