@@ -61,6 +61,7 @@ jobs:
         env:
           CGO_ENABLED: 1  # build fails for arm if unset
           CIBW_ARCHS: ${{ matrix.arch_cibw_go[0] }}
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
           PYTHON_BINARY_PATH: /usr/local/bin/python_for_build
           CIBW_BUILD: "cp3${{ matrix.python3_version }}-*"
           CIBW_ENVIRONMENT: >
