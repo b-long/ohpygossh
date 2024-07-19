@@ -100,7 +100,7 @@ jobs:
   build_linux_x86_64:
     # if: false
     name: Linux 311 x86_64
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v3
@@ -140,10 +140,10 @@ jobs:
       - name: Test Python wheel
         run: |
             # Test wheel installation
-            /usr/local/bin/python_for_build -m pip install wheelhouse/*.whl
+            python3 -m pip install wheelhouse/*.whl
 
             # Test wheel functionality
-            /usr/local/bin/python_for_build validate_ohpygossh.py
+            python3 validate_ohpygossh.py
 
       - name: Upload atifacts
         uses: actions/upload-artifact@v4
