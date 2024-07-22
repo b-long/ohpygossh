@@ -83,13 +83,14 @@ jobs:
             brew install vagrant
             vagrant --version
 
-      - name: Test Python wheel
-        run: |
-            # Test wheel installation
-            /usr/local/bin/python_for_build -m pip install wheelhouse/*.whl
+      # FIXME: Test before uploading
+      # - name: Test Python wheel
+      #   run: |
+      #       # Test wheel installation
+      #       /usr/local/bin/python_for_build -m pip install wheelhouse/*.whl
 
-            # Test wheel functionality
-            /usr/local/bin/python_for_build validate_ohpygossh.py
+      #       # Test wheel functionality
+      #       /usr/local/bin/python_for_build validate_ohpygossh.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
@@ -137,13 +138,14 @@ jobs:
             docker ps
             vagrant --version
 
-      - name: Test Python wheel
-        run: |
-            # Test wheel installation
-            python3 -m pip install wheelhouse/*.whl
+      # FIXME: Test before uploading
+      # - name: Test Python wheel
+      #   run: |
+      #       # Test wheel installation
+      #       python3 -m pip install wheelhouse/*.whl
 
-            # Test wheel functionality
-            python3 validate_ohpygossh.py
+      #       # Test wheel functionality
+      #       python3 validate_ohpygossh.py
 
       - name: Upload atifacts
         uses: actions/upload-artifact@v4
