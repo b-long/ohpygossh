@@ -20,10 +20,10 @@ jobs:
         contents: write
 
     strategy:
-        fail-fast: true
-        matrix:
-            go-version: [1.22.x]
-    # go-version: [ '1.19', '1.20', '1.22.x' ]
+      fail-fast: true
+      matrix:
+        go-version: [1.22.x]
+        python3_version: [ "3.11", "3.12" ]
 
     steps:
         - uses: actions/checkout@v4
@@ -49,6 +49,7 @@ jobs:
           with:
               go-version: ${{ matrix.go-version }}
               cache-dependency-path: go.sum
+        
         - name: Install dependencies
           run: go get .
         - name: Test with Go
@@ -57,45 +58,12 @@ jobs:
         - name: Set up Python
           uses: actions/setup-python@v4
           with:
-              python-version: '3.11'
-
-        - name: Install dependencies
-          run: |
-              pip install poetry
-
-              # Look for go/bin (skip, we know it exists)
-              echo '$HOME/'
-              ls -la "$HOME/"
-
-              echo '$HOME/.local/'
-              ls -la "$HOME/.local/"
-
-              echo '$HOME/go/'
-              ls -la "$HOME/go/"
-
-        - name: Add Go bin directory to PATH
-          run: echo "export PATH=$PATH:~/.local/go/bin" >> $GITHUB_ENV
-
+            python-version: ${{ matrix.python3_version }}
+          
         # FIXME: Add more caching
-        - name: Add gopy dependencies and build wheel
+        - name: Configure gopy / dependencies, and build wheel
           run: |
-              # Since we don't have our wheel build / install configured yet we use '--no-root'
-              poetry install --no-root
-
-              source .venv/bin/activate
-
-              # Add Go bin directory to PATH
-              echo "export PATH=$PATH:~/.local/go/bin" >> $GITHUB_ENV
-
-              go install golang.org/x/tools/cmd/goimports@latest
-
-              go install github.com/go-python/gopy@latest
-
-              poetry run pip install --upgrade setuptools wheel
-
-              gopy build --output=ohpygossh -vm=python3 .
-
-              poetry run python3 setup.py bdist_wheel
+            ./build-scripts/ci-build.sh
 
         - name: Test Python wheel
           run: |
