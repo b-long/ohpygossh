@@ -100,29 +100,29 @@ jobs:
 
   build_linux_x86_64:
     # if: false
-    name: Linux 311 x86_64
+    name: Linux Python x86_64
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Setup project files
         run: |
-            rm -rf poetry.lock pyproject.toml
-            cp setup_ci.py setup.py
+          rm -rf poetry.lock pyproject.toml
+          cp setup_ci.py setup.py
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.19.2
+        uses: pypa/cibuildwheel@v2.21.3
         env:
-          CIBW_BUILD: "cp3*_x86_64"
-          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp312-* *-musllinux_x86_64"
+          CIBW_BUILD: "cp3*_x86_64 cp3*_aarch64"
+          CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp313-* *-musllinux_x86_64"
           CIBW_ARCHS: "native"
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/usr/local/go/bin
           CIBW_BEFORE_ALL_LINUX: |
-            curl -o go.tar.gz https://dl.google.com/go/go1.22.5.linux-amd64.tar.gz
+            curl -o go.tar.gz https://dl.google.com/go/go1.22.7.linux-amd64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
-            go install github.com/go-python/gopy@v0.4.9
+            go install github.com/go-python/gopy@v0.4.10
             go install golang.org/x/tools/cmd/goimports@latest
 
 
@@ -130,7 +130,9 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Install Vagrant
-        run: sudo apt-get update && sudo apt-get install -y vagrant
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y vagrant
 
       - name: Verify docker and vagrant installation
         run: |
