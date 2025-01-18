@@ -1,4 +1,4 @@
-name: PyPIBuild
+name: TestPyPIBuild
 
 # Based on:
 # - https://github.com/tuananh/py-event-ruler/blob/0129d15e17d0023863a4d0e0e25e5256988b5c5b/.github/workflows/publish.yml
@@ -8,7 +8,8 @@ name: PyPIBuild
 on:
     push:
         branches:
-            - main
+            - develop
+            - multi-platform-cibuildwheel
     workflow_dispatch:
 
 # on:
@@ -237,7 +238,7 @@ jobs:
         - name: Upload to PyPI
           if: false
           env:
-            TWINE_UPLOAD_URL: https://pypi.org/legacy/
+            TWINE_UPLOAD_URL: https://test.pypi.org/legacy/
             PYPI_USERNAME: ${{ secrets.PYPI_TEST_USERNAME }}
             PYPI_PASSWORD: ${{ secrets.PYPI_TEST_PASSWORD }}
           run: |
@@ -246,8 +247,9 @@ jobs:
         - uses: ncipollo/release-action@v1
           with:
             artifacts: |
-                README.md,
-                dist/*.whl
+              README.md,
+              dist/*.whl
             body: OhPyGoSSH version ${{ env.PROJECT_VESION }}
-            # tag: "dev-${{ github.job }}-${{ env.PROJECT_VESION }}"
-            tag: v${{ env.PROJECT_VESION }}
+            makeLatest: "false"
+            tag: "dev-${{ github.job }}-${{ env.PROJECT_VESION }}"
+            # tag: v${{ env.PROJECT_VESION }}
