@@ -1,0 +1,110 @@
+---
+name: macOS -- Build Python wheel using golang's gopy
+
+on:
+  push:
+      branches:
+          - main
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  call-lint:
+    uses: ./.github/workflows/lint-on-macos.yaml
+
+  build:
+    runs-on: macos-13
+    permissions:
+        contents: write
+
+    strategy:
+      fail-fast: true
+      matrix:
+        go-version: [1.22.x]
+        python3_version: [ "3.11", "3.12" ]
+
+    steps:
+        - uses: actions/checkout@v4
+
+        - name: Setup Docker on macOS using Colima, Lima-VM, and Homebrew
+          uses: douglascamata/setup-docker-macos-action@v1-alpha
+          with:
+            upgrade-qemu: true
+
+
+        - name: Verify docker Installation
+          run: |
+            docker --version
+            docker ps
+
+        - name: Setup vagrant
+          run: |
+              brew install vagrant
+              vagrant --version
+
+        - name: Setup Go
+          uses: actions/setup-go@v4
+          with:
+              go-version: ${{ matrix.go-version }}
+              cache-dependency-path: go.sum
+        
+        - name: Install dependencies
+          run: go get .
+        - name: Test with Go
+          run: go test
+
+        - name: Set up Python
+          uses: actions/setup-python@v4
+          with:
+            python-version: ${{ matrix.python3_version }}
+          
+        # FIXME: Add more caching
+        - name: Configure gopy / dependencies, and build wheel
+          run: |
+            ./build-scripts/ci-build.sh
+
+        - name: Test Python wheel
+          run: |
+              # Test wheel installation
+              pip install dist/ohpygossh-0.0.10-py3-none-any.whl
+
+              # Test wheel functionality
+              python3 validate_ohpygossh.py
+
+  # release:
+  #   needs: build
+  #   runs-on: macos-latest
+  #   if: github.ref == 'refs/heads/main'
+  #   permissions:
+  #       contents: write
+  #   steps:
+  #       - uses: actions/checkout@v4
+
+        - name: Store version
+          run: |
+              pip install poetry
+
+              PROJECT_VESION=$(poetry version -s)
+              echo "PROJECT_VESION=$PROJECT_VESION" >> $GITHUB_ENV
+
+        - name: Install twine
+          run: pip install twine
+
+        - name: Upload to PyPI
+          env:
+            TWINE_UPLOAD_URL: https://upload.pypi.org/legacy/
+            PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+            PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+          run: |
+            twine upload --password "$PYPI_PASSWORD" --user "$PYPI_USERNAME" --repository-url "$TWINE_UPLOAD_URL" dist/*
+
+        - uses: ncipollo/release-action@v1
+          with:
+            artifacts: |
+                README.md,
+                dist/*.whl
+            body: OhPyGoSSH version ${{ env.PROJECT_VESION }}
+            # tag: "dev-${{ github.job }}-${{ env.PROJECT_VESION }}"
+            tag: v${{ env.PROJECT_VESION }}
