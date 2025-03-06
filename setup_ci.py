@@ -81,7 +81,7 @@ long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
     name=PACKAGE_NAME,
-    version="0.0.10",
+    version="0.0.11",
     author="b-long",
     description="A project to create a new cross-platform SSH wheel for Python.",
     long_description_content_type="text/markdown",

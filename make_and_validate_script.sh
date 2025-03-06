@@ -39,7 +39,7 @@ python3 -m pip install --upgrade setuptools wheel
 python3 setup.py bdist_wheel
 
 # Prove that the wheel can be installed
-pip install dist/ohpygossh-0.0.10-py3-none-any.whl
+pip install dist/ohpygossh-0.0.11-py3-none-any.whl
 
 # Validate functionality
 python3 validate_ohpygossh.py
