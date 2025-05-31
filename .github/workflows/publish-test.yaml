@@ -9,7 +9,7 @@ on:
     push:
         branches:
             - develop
-            - multi-platform-cibuildwheel
+            - feature/golang-1-24
     workflow_dispatch:
 
 
@@ -250,7 +250,7 @@ jobs:
     needs: [build_macos, build_linux_x86_64, build_linux_arm]
     runs-on: ubuntu-22.04
     # if: github.ref == 'refs/heads/main'
-    # if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop'
 
     steps:
         - uses: actions/checkout@v4
