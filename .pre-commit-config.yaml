@@ -7,7 +7,7 @@ exclude: |
 # See https://pre-commit.com/hooks.html for more hooks#
 repos:
     - repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.6.0
+      rev: v5.0.0
       hooks:
           - id: check-yaml
           - id: end-of-file-fixer
@@ -33,7 +33,16 @@ repos:
           # - id: validate-toml
           - id: no-go-testing
     - repo: https://github.com/codespell-project/codespell
-      rev: v2.3.0
+      rev: v2.4.1
       hooks:
           - id: codespell
-            args: [-L, blong, gohpygossh]
+            args: ["--ignore-words-list", "b-long, gohpygossh", "--skip=go.sum,gohpygossh/"]
+
+    - repo: https://github.com/astral-sh/ruff-pre-commit
+      # Ruff version.
+      rev: v0.11.6
+      hooks:
+        # Run the linter.
+        - id: ruff
+        # Run the formatter.
+        - id: ruff-format

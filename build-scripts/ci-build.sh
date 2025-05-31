@@ -56,4 +56,4 @@ gopy build --output=ohpygossh -vm=python3 .
 
 poetry run python3 setup.py bdist_wheel
 
-pip install dist/ohpygossh-0.0.10-py3-none-any.whl
+pip install dist/ohpygossh-0.0.12-py3-none-any.whl

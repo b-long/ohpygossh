@@ -39,7 +39,11 @@ def get_vagrant_ssh_field(field: str, vagrantfile_dir: Path):
     """Retrieves some 'ssh-confg' from the active Vagrant VM."""
     # Captures the output of vagrant ssh-config
     process = subprocess.Popen(
-        ["vagrant", "ssh-config"], stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, cwd=vagrantfile_dir
+        ["vagrant", "ssh-config"],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        text=True,
+        cwd=vagrantfile_dir,
     )
 
     ssh_config_output, err = process.communicate()
@@ -65,7 +69,6 @@ def test_with_keys_only():
         from ohpygossh.gohpygossh import GenerateKeysForSsh, KeysForSsh
 
         with tempfile.TemporaryDirectory() as tmpDir:
-
             print("'ohpygossh': Generating SSH key pair")
             keys: KeysForSsh = GenerateKeysForSsh(tmpDir, keys_only_user)
 
@@ -111,7 +114,9 @@ vagrant status && echo "That's the status"
             #     description_of_command="cat public key to authorized_keys",
             # )
 
-            ssh_hostname = get_vagrant_ssh_field("HostName", vagrantfile_dir=DOCKER_IN_VAGRANT)
+            ssh_hostname = get_vagrant_ssh_field(
+                "HostName", vagrantfile_dir=DOCKER_IN_VAGRANT
+            )
             # print(f"{ssh_hostname}")
 
             ssh_port = get_vagrant_ssh_field("Port", vagrantfile_dir=DOCKER_IN_VAGRANT)
@@ -128,17 +133,17 @@ ssh -o StrictHostKeyChecking=no -i {keys.PrivKeyAbsPath} vagrant@{ssh_hostname} 
                 description_of_command="Open connection, with ssh -i flag and run command",
             )
 
-#             run_multiple_commands(
-#                 commands=f"""
+    #             run_multiple_commands(
+    #                 commands=f"""
 
-# echo "Testing generated keypair"
-# echo "Performing authentication as '{keys_only_user}' user"
+    # echo "Testing generated keypair"
+    # echo "Performing authentication as '{keys_only_user}' user"
 
-# ssh -i {keys.PrivKeyAbsPath} {keys_only_user}@{ssh_hostname} -p {ssh_port} -c 'echo "We did it!"'
+    # ssh -i {keys.PrivKeyAbsPath} {keys_only_user}@{ssh_hostname} -p {ssh_port} -c 'echo "We did it!"'
 
-# """,
-#                 description_of_command="Open connection, with ssh -i flag and run command",
-#             )
+    # """,
+    #                 description_of_command="Open connection, with ssh -i flag and run command",
+    #             )
 
     except Exception as e:
         raise RuntimeError("An unexpected error occurred testing ohpygossh") from e
@@ -172,9 +177,6 @@ def test_with_cloud_init():
 
         with tempfile.TemporaryDirectory() as tmpDir:
             print("Created temporary directory", tmpDir)
-
-            td_path = Path(tmpDir)
-            copied_vagrant = td_path / "vm"
 
             # Copy all files
             for filename in glob.glob(join(vagrant_test_dir, "*.*")):
