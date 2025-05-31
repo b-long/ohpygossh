@@ -22,17 +22,16 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        go-version: [1.22.x]
+        go-version: [1.24.x]
         python3_version: [ "3.11", "3.12" ]
 
     steps:
         - uses: actions/checkout@v4
 
-        - name: Setup Docker on macOS using Colima, Lima-VM, and Homebrew
-          uses: douglascamata/setup-docker-macos-action@v1.0.0
-          with:
-            upgrade-qemu: true
-
+        - name: Setup colima
+          run: |
+            brew install colima docker
+            colima start
 
         - name: Verify docker Installation
           run: |
@@ -68,7 +67,7 @@ jobs:
         - name: Test Python wheel
           run: |
               # Test wheel installation
-              pip install dist/ohpygossh-0.0.12-py3-none-any.whl
+              pip install dist/ohpygossh-0.0.13-py3-none-any.whl
 
               # Test wheel functionality
               python3 validate_ohpygossh.py

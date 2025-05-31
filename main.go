@@ -27,7 +27,6 @@ type KeysForSsh struct {
 	CloudUser        string
 	PrivKeyAbsPath   string
 	PublicKeyAbsPath string
-	Err              string
 }
 
 func GenerateKeysForSsh(destinationDir string, cloudUser string) KeysForSsh {
@@ -42,7 +41,7 @@ func GenerateKeysForSsh(destinationDir string, cloudUser string) KeysForSsh {
 	}
 
 	privateKeyFileName := temp_file.Name()
-	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f " + privateKeyFileName + " <<<y >/dev/null 2>&1")
+	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f %s <<<y >/dev/null 2>&1", privateKeyFileName)
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
@@ -67,7 +66,6 @@ func GenerateKeysForSsh(destinationDir string, cloudUser string) KeysForSsh {
 		CloudUser:        cloudUser,
 		PublicKeyAbsPath: publicKeyAbsPath,
 		PrivKeyAbsPath:   privateKeyAbsPath,
-		Err:              fmt.Sprint(err),
 	}
 }
 
@@ -90,7 +88,7 @@ func GenerateKeyPairAndCloudInit(destinationDir string, cloudUser string) KeysAn
 	}
 
 	privateKeyFileName := temp_file.Name()
-	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f " + privateKeyFileName + " <<<y >/dev/null 2>&1")
+	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f %s <<<y >/dev/null 2>&1", privateKeyFileName)
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
@@ -192,19 +190,6 @@ func Run(hostname string, username string, privateKey string, command string) (s
 		return "", err
 	}
 	signer, err := ssh.ParsePrivateKey(keyBytes)
-	if err != nil {
-		return "", err
-	}
-	// signer, err := ssh.ParseRawPrivateKey([]byte(privateKey))
-	// key, err := x509.ParsePKCS1PrivateKey([]byte(privateKey))
-	// if err != nil {
-	// 	log.Fatal(err)
-	// }
-	// signer, err := ssh.NewSignerFromKey(key)
-
-	// ssh.PublicKeys(key),
-	// ssh.PublicKeys(key),
-	// ssh.ParseRawPrivateKey(privateKey),
 	if err != nil {
 		return "", err
 	}

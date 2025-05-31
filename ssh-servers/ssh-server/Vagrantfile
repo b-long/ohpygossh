@@ -1,57 +1,10 @@
-# Configuration with fixed local IP
-# http://192.168.56.10:8080/dashboard/#/
-$script = <<-SCRIPT
-
-date > /etc/vagrant_provisioned_at
-
-sudo apt-get update -y && sudo apt install -y snapd
-# sudo snap install traefik
-# sudo systemctl restart snap.traefik.traefik
-
-sudo snap install docker
-
-SCRIPT
-
-$compose_content = <<-CC
-version: '3'
-
-services:
-  reverse-proxy:
-    # The official v2 Traefik docker image
-    image: traefik:v2.10
-    # Enables the web UI and tells Traefik to listen to docker
-    command: --api.insecure=true --providers.docker
-    ports:
-      # The HTTP port
-      - "80:80"
-      # The Web UI (enabled by --api.insecure=true)
-      - "8080:8080"
-    volumes:
-      # So that Traefik can listen to the Docker events
-      - /var/run/docker.sock:/var/run/docker.sock
-CC
+# This VM is here solely to provide an SSH server.
 
 Vagrant.configure("2") do |config|
-    # config.vm.box = "hashicorp/bionic64"
-    config.vm.box = "ubuntu/jammy64"
+  # config.vm.box = "hashicorp/bionic64"
+  config.vm.box = "ubuntu/jammy64"
 
-    # config.ssh.private_key_path = "#{ENV['HOME']}/.ssh/id_rsa
-    # config.ssh.private_key_path = "/var/folders/r7/srtk3z715s1bqzq2xy0mlsk80000gn/T/multipass-test22228396012/id_rsa_test1941709452"
-    # config.ssh.insert_key = true
+  # Configuration with fixed local IP
+  config.vm.network "private_network", ip: "192.168.56.10"
 
-    # config.vm.provision "shell", inline: $script
-
-    # config.vm.provision "docker" do |d|
-    #   d.run "ubuntu",
-    #     cmd: "bash -l",
-    #     args: "-v '/vagrant:/var/www'"
-
-    config.vm.network "private_network", ip: "192.168.56.10"
-    # config.vm.network :forwarded_port, guest: 80, host: 4567
-
-"""
-
-
-"""
-    # end
-  end
+end
