@@ -18,10 +18,8 @@ do with available open source tooling?
 
 1. Respect and give kudos to all the work that's come
 before.
-    1. In particular, the Herculian efforts of [`paramiko`] and [`asyncssh`].
-    1. Please also be very knid to all project dependencies
-
-## Play nicely
+    1. In particular, the Herculian efforts of [`gopy`], [`paramiko`] and [`asyncssh`].
+    1. Please also be kind to all other open-source software projects you find.
 
 It is paramount that we all play nicely.  To that end, please do your very best
 not to create churn or spur conversations that may upset other developers,
@@ -57,17 +55,13 @@ As a Python user:
 ## Reference
 
 Based on:
-https://last9.io/blog/using-golang-package-in-python-using-gopy/
+* https://github.com/b-long/cookiecutter-gopy
+* https://last9.io/blog/using-golang-package-in-python-using-gopy/
 
 Learn Go:
 * https://learnxinyminutes.com/docs/go/
 * https://gist.github.com/prologic/5f6afe9c1b98016ca278f4d507e65510
 
-## TODO
-
-- [ ] Figure out if generaetd folder (`ls -la ohpygossh/`) should be kept in git.
-
-
-
+[`gopy`]: https://github.com/go-python/gopy
 [`paramiko`]: https://pypi.org/project/paramiko/
 [`asyncssh`]: https://pypi.org/project/asyncssh/
