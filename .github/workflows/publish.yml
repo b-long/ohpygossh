@@ -30,7 +30,7 @@ jobs:
       - name: set up Go
         uses: actions/setup-go@v3
         with:
-          go-version: "1.22.x"
+          go-version: "1.24.x"
 
       - name: Setup project files
         run: |
@@ -65,8 +65,10 @@ jobs:
             PATH=$PATH:/usr/local/go/bin
             GOARCH=${{ matrix.arch_cibw_go[1] }}
 
-      - name: Setup Docker on macOS using Colima, Lima-VM, and Homebrew
-        uses: douglascamata/setup-docker-macos-action@v1.0.0
+      - name: Setup colima
+        run: |
+            brew install colima docker
+            colima start
 
       - name: Verify docker Installation
         run: |
@@ -115,7 +117,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/usr/local/go/bin
           CIBW_BEFORE_ALL_LINUX: |
-            curl -o go.tar.gz https://dl.google.com/go/go1.22.7.linux-amd64.tar.gz
+            curl -o go.tar.gz https://dl.google.com/go/go1.24.3.linux-amd64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
             go install github.com/go-python/gopy@v0.4.10
             go install golang.org/x/tools/cmd/goimports@latest
@@ -180,7 +182,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/usr/local/go/bin
           CIBW_BEFORE_ALL_LINUX: |
-            curl -o go.tar.gz https://dl.google.com/go/go1.22.7.linux-arm64.tar.gz
+            curl -o go.tar.gz https://dl.google.com/go/go1.24.3.linux-arm64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
             go install github.com/go-python/gopy@v0.4.10
             go install golang.org/x/tools/cmd/goimports@latest
@@ -207,7 +209,7 @@ jobs:
 #       - name: set up Go
 #         uses: actions/setup-go@v3
 #         with:
-#           go-version: "1.22.x"
+#           go-version: "1.24.x"
 
 #       - name: install gopy
 #         run: go install github.com/go-python/gopy@v0.4.10
