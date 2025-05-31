@@ -12,12 +12,6 @@ on:
             - multi-platform-cibuildwheel
     workflow_dispatch:
 
-# on:
-#   # release:
-#   #   types: [created]
-#   push:
-#     tags:
-#       - '*'
 
 jobs:
   build_macos:
@@ -286,7 +280,7 @@ jobs:
           with:
             repository-url: https://test.pypi.org/legacy/
             packages-dir: dist/
-        
+
         - uses: ncipollo/release-action@v1
           with:
             artifacts: |
