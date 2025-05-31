@@ -26,7 +26,7 @@ setuptools.setup(
     url="https://github.com/b-long/ohpygossh",
     package_data={PACKAGE_NAME: ["*.so"]},
     # Should match 'pyproject.toml' version number
-    version="0.0.11",
+    version="0.0.12",
     author_email="b-long@users.noreply.github.com",
     include_package_data=True,
 )
