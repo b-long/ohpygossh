@@ -42,7 +42,7 @@ func GenerateKeysForSsh(destinationDir string, cloudUser string) KeysForSsh {
 	}
 
 	privateKeyFileName := temp_file.Name()
-	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f " + privateKeyFileName + " <<<y >/dev/null 2>&1")
+	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f %s <<<y >/dev/null 2>&1", privateKeyFileName)
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
@@ -90,7 +90,7 @@ func GenerateKeyPairAndCloudInit(destinationDir string, cloudUser string) KeysAn
 	}
 
 	privateKeyFileName := temp_file.Name()
-	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f " + privateKeyFileName + " <<<y >/dev/null 2>&1")
+	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f %s <<<y >/dev/null 2>&1", privateKeyFileName)
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
