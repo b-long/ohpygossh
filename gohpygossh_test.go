@@ -53,38 +53,6 @@ func TestGenerateKeyPairAndCloudInit(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 }
 
-// func TestRun(t *testing.T) {
-// 	// Create a virtual machine with username "user" and identity file "id_rsa"
-
-// 	vm := gmachine.New()
-// 	// vm, err := gmachine.New(gmachine.VMConfig{
-// 	// 	Username:     "user",
-// 	// 	IdentityFile: "id_rsa",
-// 	// })
-// 	// if err != nil {
-// 	// 	t.Fatal(err)
-// 	// }
-// 	// defer vm.Close()
-
-// 	// Initialize the virtual machine
-// 	err = vm.Run()
-// 	// err = vm.Start()
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	// Execute the 'ls' command on the remote server
-// 	output, err := gohpygossh.Run(vm.Hostname, vm.Username, vm.IdentityFile, "ls")
-// 	if err != nil {
-// 		t.Fatal(err)
-// 	}
-
-// 	// Verify the output contains expected files or directories
-// 	if !strings.Contains(output, "testdata") {
-// 		t.Error("Expected 'testdata' directory in output but found:", output)
-// 	}
-// }
-
 func TestRunWithMultipass(t *testing.T) {
 	// Install go-multipass if not already installed
 	if _, err := exec.LookPath("multipass"); err != nil {
