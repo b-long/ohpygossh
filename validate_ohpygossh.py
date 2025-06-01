@@ -173,7 +173,7 @@ def test_with_cloud_init():
         from ohpygossh.gohpygossh import GenerateKeyPairAndCloudInit, KeysAndInit
 
         this_file_dir = Path(__file__).parent
-        vagrant_test_dir = this_file_dir / "ssh-servers" / "new"
+        vagrant_test_dir = this_file_dir / "ssh-servers" / "cloud-init"
 
         with tempfile.TemporaryDirectory() as tmpDir:
             print("Created temporary directory", tmpDir)
