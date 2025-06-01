@@ -23,25 +23,12 @@ jobs:
       fail-fast: true
       matrix:
         go-version: [1.24.x]
-        python3_version: [ "3.11", "3.12" ]
-
+        python3_version: [ 11, 12 ]
+        arch_cibw_go:
+          - [ "x86_64", "amd64" ]
+          - [ "arm64", "arm64" ]
     steps:
         - uses: actions/checkout@v4
-
-        - name: Setup colima
-          run: |
-            brew install colima docker
-            colima start
-
-        - name: Verify docker Installation
-          run: |
-            docker --version
-            docker ps
-
-        - name: Setup vagrant
-          run: |
-              brew install vagrant
-              vagrant --version
 
         - name: Setup Go
           uses: actions/setup-go@v4
@@ -49,61 +36,44 @@ jobs:
               go-version: ${{ matrix.go-version }}
               cache-dependency-path: go.sum
 
-        - name: Install dependencies
-          run: go get .
+        - name: install gopy
+          run: go install github.com/go-python/gopy@v0.4.10
+
+        - name: install goimports
+          run: go install golang.org/x/tools/cmd/goimports@latest
+
         - name: Test with Go
           run: go test
 
-        - name: Set up Python
-          uses: actions/setup-python@v4
-          with:
-            python-version: ${{ matrix.python3_version }}
-
-        # FIXME: Add more caching
-        - name: Configure gopy / dependencies, and build wheel
+        - name: Setup project files
           run: |
-            ./build-scripts/ci-build.sh
+              rm -rf poetry.lock pyproject.toml
+              cp setup_ci.py setup.py
 
-        - name: Test Python wheel
+        - name: install gopy
+          run: go install github.com/go-python/gopy@v0.4.10
+
+        - name: install goimports
+          run: go install golang.org/x/tools/cmd/goimports@latest
+
+        - name: install python 3.${{ matrix.python3_version }}
           run: |
-              # Test wheel installation
-              pip install dist/ohpygossh-0.0.13-py3-none-any.whl
+            brew install --force --overwrite python@3.${{ matrix.python3_version }}
+            ln -s /usr/local/opt/python@3.${{ matrix.python3_version }}/bin/python3.${{ matrix.python3_version }}  /usr/local/bin/python_for_build
+            /usr/local/bin/python_for_build --version
 
-              # Test wheel functionality
-              python3 validate_ohpygossh.py
+        - name: install cibuildwheel and pybindgen
+          run: /usr/local/bin/python_for_build -m pip install --break-system-packages cibuildwheel==2.21.3 pybindgen
 
-  # release:
-  #   needs: build
-  #   runs-on: macos-latest
-  #   if: github.ref == 'refs/heads/main'
-  #   permissions:
-  #       contents: write
-  #   steps:
-  #       - uses: actions/checkout@v4
-
-        - name: Store version
-          run: |
-              pip install poetry
-
-              PROJECT_VESION=$(poetry version -s)
-              echo "PROJECT_VESION=$PROJECT_VESION" >> $GITHUB_ENV
-
-        - name: Install twine
-          run: pip install twine
-
-        - name: Upload to PyPI
+        - name: build wheels
+          run: /usr/local/bin/python_for_build -m cibuildwheel --output-dir wheelhouse
           env:
-            TWINE_UPLOAD_URL: https://upload.pypi.org/legacy/
-            PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
-            PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-          run: |
-            twine upload --password "$PYPI_PASSWORD" --user "$PYPI_USERNAME" --repository-url "$TWINE_UPLOAD_URL" dist/*
-
-        - uses: ncipollo/release-action@v1
-          with:
-            artifacts: |
-                README.md,
-                dist/*.whl
-            body: OhPyGoSSH version ${{ env.PROJECT_VESION }}
-            # tag: "dev-${{ github.job }}-${{ env.PROJECT_VESION }}"
-            tag: v${{ env.PROJECT_VESION }}
+            CGO_ENABLED: 1  # build fails for arm if unset
+            CIBW_ARCHS: ${{ matrix.arch_cibw_go[0] }}
+            CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
+            PYTHON_BINARY_PATH: /usr/local/bin/python_for_build
+            CIBW_BUILD: "cp3${{ matrix.python3_version }}-*"
+            CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp313-* *-musllinux_x86_64"
+            CIBW_ENVIRONMENT: >
+              PATH=$PATH:/usr/local/go/bin
+              GOARCH=${{ matrix.arch_cibw_go[1] }}
