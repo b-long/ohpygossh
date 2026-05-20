@@ -6,9 +6,10 @@ name: PyPIBuild
 
 
 on:
-    push:
-        branches:
-            - main
+    workflow_run:
+        workflows: ["Release Please"]
+        types:
+            - completed
     workflow_dispatch:
 
 jobs:
@@ -46,24 +47,39 @@ jobs:
       - name: install python 3.${{ matrix.python3_version }}
         run: |
           brew install --force --overwrite python@3.${{ matrix.python3_version }}
-          ln -s /usr/local/opt/python@3.${{ matrix.python3_version }}/bin/python3.${{ matrix.python3_version }}  /usr/local/bin/python_for_build
-          /usr/local/bin/python_for_build --version
+          BREW_PREFIX="$(brew --prefix)"
+          ln -s "$BREW_PREFIX/opt/python@3.${{ matrix.python3_version }}/bin/python3.${{ matrix.python3_version }}" "$BREW_PREFIX/bin/python_for_build"
+          echo "PYTHON_FOR_BUILD=$BREW_PREFIX/bin/python_for_build" >> "$GITHUB_ENV"
+          "$BREW_PREFIX/bin/python_for_build" --version
+
+      - name: Create CC wrapper to replace deprecated -Ofast flag
+        run: |
+          cat > /tmp/cc-wrapper.sh << 'EOF'
+          #!/bin/bash
+          args=()
+          for arg in "$@"; do
+            [[ "$arg" == "-Ofast" ]] && args+=("-O3" "-ffast-math") || args+=("$arg")
+          done
+          exec clang "${args[@]}"
+          EOF
+          chmod +x /tmp/cc-wrapper.sh
 
       - name: install cibuildwheel and pybindgen
-        run: /usr/local/bin/python_for_build -m pip install --break-system-packages cibuildwheel==2.21.3 pybindgen
+        run: $PYTHON_FOR_BUILD -m pip install --break-system-packages cibuildwheel==3.4.1 pybindgen
 
       - name: build wheels
-        run: /usr/local/bin/python_for_build -m cibuildwheel --output-dir wheelhouse
+        run: $PYTHON_FOR_BUILD -m cibuildwheel --output-dir wheelhouse
         env:
           CGO_ENABLED: 1  # build fails for arm if unset
           CIBW_ARCHS: ${{ matrix.arch_cibw_go[0] }}
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
-          PYTHON_BINARY_PATH: /usr/local/bin/python_for_build
+          PYTHON_BINARY_PATH: ${{ env.PYTHON_FOR_BUILD }}
           CIBW_BUILD: "cp3${{ matrix.python3_version }}-*"
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp313-* *-musllinux_x86_64"
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/usr/local/go/bin
             GOARCH=${{ matrix.arch_cibw_go[1] }}
+            CC=/tmp/cc-wrapper.sh
 
       - name: Setup colima
         run: |
@@ -109,7 +125,7 @@ jobs:
             cp setup_ci.py setup.py
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.4.1
         env:
           CIBW_BUILD: "cp3*_x86_64 cp3*_aarch64"
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp313-* *-musllinux_x86_64"
@@ -174,7 +190,7 @@ jobs:
           platforms: all
 
       - name: Build wheels
-        uses: pypa/cibuildwheel@v2.21.3
+        uses: pypa/cibuildwheel@v3.4.1
         env:
           CIBW_BUILD: "cp3*_aarch64"
           CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp313-* *-musllinux_x86_64"
@@ -218,7 +234,7 @@ jobs:
 #         run: go install golang.org/x/tools/cmd/goimports@latest
 
 #       - name: Build wheels
-#         uses: pypa/cibuildwheel@v2.21.3
+#         uses: pypa/cibuildwheel@v3.4.1
 #         env:
 #           # CGO_ENABLED: 1
 #           CIBW_BUILD: "cp3*"
@@ -241,8 +257,7 @@ jobs:
       id-token: write
     needs: [build_macos, build_linux_x86_64, build_linux_arm]
     runs-on: ubuntu-22.04
-    # If branch is 'main'
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
         - uses: actions/checkout@v4
@@ -250,34 +265,16 @@ jobs:
 
         - name: Collect all wheels
           run: |
-            # ls -R
             mkdir dist
             for f in $(find . -type f -name '*.whl'); do mv ${f} dist; done;
             ls -R dist
 
-        - name: Store version
-          run: |
-              pip install poetry
-
-              PROJECT_VESION=$(poetry version -s)
-              echo "PROJECT_VESION=$PROJECT_VESION" >> $GITHUB_ENV
-
         # Publish with "trusted publisher" mechanism:
         # https://docs.pypi.org/trusted-publishers/
         #
-        # Requires GHA token permission (above in YAML) and PyPI magement:
-        #   https://test.pypi.org/manage/project/ohpygossh/settings/publishing/
+        # Requires GHA token permission (above in YAML) and PyPI management:
+        #   https://pypi.org/manage/project/ohpygossh/settings/publishing/
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
           with:
-            # repository-url: https://pypi.org/legacy/
             packages-dir: dist/
-
-        - uses: ncipollo/release-action@v1
-          with:
-            artifacts: |
-                README.md,
-                dist/*.whl
-            body: OhPyGoSSH version ${{ env.PROJECT_VESION }}
-            # tag: "dev-${{ github.job }}-${{ env.PROJECT_VESION }}"
-            tag: v${{ env.PROJECT_VESION }}
