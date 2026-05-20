@@ -62,19 +62,21 @@ jobs:
         - name: install python 3.${{ matrix.python3_version }}
           run: |
             brew install --force --overwrite python@3.${{ matrix.python3_version }}
-            ln -s /usr/local/opt/python@3.${{ matrix.python3_version }}/bin/python3.${{ matrix.python3_version }}  /usr/local/bin/python_for_build
-            /usr/local/bin/python_for_build --version
+            BREW_PREFIX="$(brew --prefix)"
+            ln -s "$BREW_PREFIX/opt/python@3.${{ matrix.python3_version }}/bin/python3.${{ matrix.python3_version }}" "$BREW_PREFIX/bin/python_for_build"
+            echo "PYTHON_FOR_BUILD=$BREW_PREFIX/bin/python_for_build" >> "$GITHUB_ENV"
+            "$BREW_PREFIX/bin/python_for_build" --version
 
         - name: install cibuildwheel and pybindgen
-          run: /usr/local/bin/python_for_build -m pip install --break-system-packages cibuildwheel==2.21.3 pybindgen
+          run: $PYTHON_FOR_BUILD -m pip install --break-system-packages cibuildwheel==2.21.3 pybindgen
 
         - name: build wheels
-          run: /usr/local/bin/python_for_build -m cibuildwheel --output-dir wheelhouse
+          run: $PYTHON_FOR_BUILD -m cibuildwheel --output-dir wheelhouse
           env:
             CGO_ENABLED: 1  # build fails for arm if unset
             CIBW_ARCHS: ${{ matrix.arch_cibw_go[0] }}
             CIBW_REPAIR_WHEEL_COMMAND_MACOS: ""
-            PYTHON_BINARY_PATH: /usr/local/bin/python_for_build
+            PYTHON_BINARY_PATH: ${{ env.PYTHON_FOR_BUILD }}
             CIBW_BUILD: "cp3${{ matrix.python3_version }}-*"
             CIBW_SKIP: "cp36-* cp37-* cp38-* cp39-* cp310-* cp313-* *-musllinux_x86_64"
             CIBW_ENVIRONMENT: >
