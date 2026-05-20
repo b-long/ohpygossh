@@ -81,15 +81,15 @@ long_description = (this_directory / "README.md").read_text()
 
 setuptools.setup(
     name=PACKAGE_NAME,
-    version="0.0.15",
+    version="0.0.16",
     author="b-long",
     description="A project to create a new cross-platform SSH wheel for Python.",
     long_description_content_type="text/markdown",
     long_description=long_description,
     url="https://github.com/b-long/ohpygossh",
+    license="MIT",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     include_package_data=True,

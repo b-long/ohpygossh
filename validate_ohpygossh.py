@@ -108,19 +108,11 @@ vagrant status && echo "That's the status"
                 commands=commands, description_of_command="Vagrant up, etc."
             )
 
-            # commands = f"""cat {keys.PublicKeyAbsPath} | vagrant ssh --command "cat >> ~/.ssh/authorized_keys && echo 'SSH key copied' " """
-            # run_multiple_commands(
-            #     commands=commands,
-            #     description_of_command="cat public key to authorized_keys",
-            # )
-
             ssh_hostname = get_vagrant_ssh_field(
                 "HostName", vagrantfile_dir=DOCKER_IN_VAGRANT
             )
-            # print(f"{ssh_hostname}")
 
             ssh_port = get_vagrant_ssh_field("Port", vagrantfile_dir=DOCKER_IN_VAGRANT)
-            # print(f"{ssh_port}")
             run_multiple_commands(
                 commands=f"""
 
@@ -132,18 +124,6 @@ ssh -o StrictHostKeyChecking=no -i {keys.PrivKeyAbsPath} vagrant@{ssh_hostname} 
 """,
                 description_of_command="Open connection, with ssh -i flag and run command",
             )
-
-    #             run_multiple_commands(
-    #                 commands=f"""
-
-    # echo "Testing generated keypair"
-    # echo "Performing authentication as '{keys_only_user}' user"
-
-    # ssh -i {keys.PrivKeyAbsPath} {keys_only_user}@{ssh_hostname} -p {ssh_port} -c 'echo "We did it!"'
-
-    # """,
-    #                 description_of_command="Open connection, with ssh -i flag and run command",
-    #             )
 
     except Exception as e:
         raise RuntimeError("An unexpected error occurred testing ohpygossh") from e
@@ -173,7 +153,7 @@ def test_with_cloud_init():
         from ohpygossh.gohpygossh import GenerateKeyPairAndCloudInit, KeysAndInit
 
         this_file_dir = Path(__file__).parent
-        vagrant_test_dir = this_file_dir / "ssh-servers" / "new"
+        vagrant_test_dir = this_file_dir / "ssh-servers" / "cloud-init"
 
         with tempfile.TemporaryDirectory() as tmpDir:
             print("Created temporary directory", tmpDir)
@@ -187,9 +167,6 @@ def test_with_cloud_init():
                 copy(filename, tmpDir)
 
             kai: KeysAndInit = GenerateKeyPairAndCloudInit(tmpDir, "validation-user")
-            # Prints the entire struct, like:
-            # print(kai)
-            #   gohpygossh.KeysAndInit{CloudInitPath=/var/folders/r7/srtk3z715s1bqzq2xy0mlsk80000gn/T/tmp56kflw4t/cloud-init.yaml, Err=<nil>, SshKeyPath=/var/folders/r7/srtk3z715s1bqzq2xy0mlsk80000gn/T/tmp56kflw4t/id_rsa_test2220445842, handle=1}
 
             print(listdir(tmpDir))
 
@@ -210,9 +187,7 @@ def test_with_cloud_init():
             else:
                 print("Vagrant VM successfully brought up.")
 
-            # At this point, we can run
-            # ssh -o StrictHostKeyChecking=no -i id_rsa_test2669721341 cloud-user@192.168.56.10 'echo "Connection success"'
-            ssh_cmd = f"ssh -o StrictHostKeyChecking=no -i {kai.SshKeyPath} cloud-user@192.168.56.10 'echo \"Connection success\"'"
+            ssh_cmd = f"ssh -o StrictHostKeyChecking=no -i {kai.SshKeyPath} {kai.CloudUser}@192.168.56.10 'echo \"Connection success\"'"
             split_ssh_cmd = split(ssh_cmd)
             ssh_process = subprocess.Popen(
                 split_ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
@@ -233,8 +208,6 @@ SSH result:
 """
                 )
 
-        # breakpoint()
-
     except Exception as e:
         raise RuntimeError("An unexpected error occurred testing ohpygossh") from e
 
@@ -242,8 +215,4 @@ SSH result:
 if __name__ == "__main__":
     test_say_hello()
 
-    # test_with_cloud_init()
-
     test_with_keys_only()
-    # ssh_port = get_vagrant_ssh_field("Port", vagrantfile_dir=DOCKER_IN_VAGRANT)
-    # print(f"{ssh_port}")
