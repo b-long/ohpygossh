@@ -112,6 +112,58 @@ func TestGenerateShortUUID(t *testing.T) {
 	}
 }
 
+func TestPublicKeyFile(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "pubkeyfile-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	r := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+
+	auth := gohpygossh.PublicKeyFile(r.PrivKeyAbsPath)
+	if auth == nil {
+		t.Error("expected non-nil AuthMethod for valid private key")
+	}
+
+	authBad := gohpygossh.PublicKeyFile("/nonexistent/path/to/key")
+	if authBad != nil {
+		t.Error("expected nil AuthMethod for nonexistent file")
+	}
+}
+
+func TestGenerateKeyPairAndCloudInit_Content(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "cloud-init-content-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	cloudUser := "myuser"
+	r := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, cloudUser)
+	if r.Err != "<nil>" {
+		t.Fatalf("unexpected error: %s", r.Err)
+	}
+
+	content, err := os.ReadFile(r.CloudInitPath)
+	if err != nil {
+		t.Fatalf("could not read cloud-init file: %v", err)
+	}
+	contentStr := string(content)
+
+	if !strings.Contains(contentStr, cloudUser) {
+		t.Errorf("cloud-init content missing username %q", cloudUser)
+	}
+
+	pubKey, err := os.ReadFile(r.SshKeyPath + ".pub")
+	if err != nil {
+		t.Fatalf("could not read public key file: %v", err)
+	}
+	if !strings.Contains(contentStr, strings.TrimSpace(string(pubKey))) {
+		t.Error("cloud-init content missing public key")
+	}
+}
+
 func TestRunWithMultipass(t *testing.T) {
 	// Install go-multipass if not already installed
 	if _, err := exec.LookPath("multipass"); err != nil {

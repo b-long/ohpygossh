@@ -162,19 +162,11 @@ func GenerateShortUUID(length int) (string, error) {
 }
 
 func PublicKeyFile(file string) ssh.AuthMethod {
-	f, err := os.Open(file)
+	keyBytes, err := os.ReadFile(file)
 	if err != nil {
 		return nil
 	}
-	defer f.Close()
-
-	// Chunk size
-	const maxSize = 4
-
-	// Create buffer
-	byteBuffer := make([]byte, maxSize)
-
-	key, err := ssh.ParsePrivateKey(byteBuffer)
+	key, err := ssh.ParsePrivateKey(keyBytes)
 	if err != nil {
 		return nil
 	}
