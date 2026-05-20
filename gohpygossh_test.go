@@ -66,14 +66,13 @@ func TestRunWithMultipass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	// cloud_init_file, identity_file, err := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir)
 	r := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
 	if r.Err != "<nil>" {
 		t.Fatal(err)
 	}
 
-	// FIXME: Use dynamic VM name
-	dyn_vm_name := "myvm"
+	shortID, _ := gohpygossh.GenerateShortUUID(4)
+	dyn_vm_name := fmt.Sprintf("testvm%s", shortID)
 
 	instance, err := multipass.LaunchV2(&multipass.LaunchReqV2{
 		Image:         "lts",

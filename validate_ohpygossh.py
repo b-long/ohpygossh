@@ -187,7 +187,7 @@ def test_with_cloud_init():
             else:
                 print("Vagrant VM successfully brought up.")
 
-            ssh_cmd = f"ssh -o StrictHostKeyChecking=no -i {kai.SshKeyPath} cloud-user@192.168.56.10 'echo \"Connection success\"'"
+            ssh_cmd = f"ssh -o StrictHostKeyChecking=no -i {kai.SshKeyPath} {kai.CloudUser}@192.168.56.10 'echo \"Connection success\"'"
             split_ssh_cmd = split(ssh_cmd)
             ssh_process = subprocess.Popen(
                 split_ssh_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE
