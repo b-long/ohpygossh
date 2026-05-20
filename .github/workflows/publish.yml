@@ -6,9 +6,10 @@ name: PyPIBuild
 
 
 on:
-    push:
-        branches:
-            - main
+    workflow_run:
+        workflows: ["Release Please"]
+        types:
+            - completed
     workflow_dispatch:
 
 jobs:
@@ -241,8 +242,7 @@ jobs:
       id-token: write
     needs: [build_macos, build_linux_x86_64, build_linux_arm]
     runs-on: ubuntu-22.04
-    # If branch is 'main'
-    if: github.ref == 'refs/heads/main'
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
         - uses: actions/checkout@v4
@@ -250,34 +250,16 @@ jobs:
 
         - name: Collect all wheels
           run: |
-            # ls -R
             mkdir dist
             for f in $(find . -type f -name '*.whl'); do mv ${f} dist; done;
             ls -R dist
 
-        - name: Store version
-          run: |
-              pip install poetry
-
-              PROJECT_VESION=$(poetry version -s)
-              echo "PROJECT_VESION=$PROJECT_VESION" >> $GITHUB_ENV
-
         # Publish with "trusted publisher" mechanism:
         # https://docs.pypi.org/trusted-publishers/
         #
-        # Requires GHA token permission (above in YAML) and PyPI magement:
-        #   https://test.pypi.org/manage/project/ohpygossh/settings/publishing/
+        # Requires GHA token permission (above in YAML) and PyPI management:
+        #   https://pypi.org/manage/project/ohpygossh/settings/publishing/
         - name: Publish package distributions to PyPI
           uses: pypa/gh-action-pypi-publish@release/v1
           with:
-            # repository-url: https://pypi.org/legacy/
             packages-dir: dist/
-
-        - uses: ncipollo/release-action@v1
-          with:
-            artifacts: |
-                README.md,
-                dist/*.whl
-            body: OhPyGoSSH version ${{ env.PROJECT_VESION }}
-            # tag: "dev-${{ github.job }}-${{ env.PROJECT_VESION }}"
-            tag: v${{ env.PROJECT_VESION }}

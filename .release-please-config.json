@@ -1,0 +1,37 @@
+{
+  "release-type": "simple",
+  "include-v-in-tag": true,
+  "bootstrap-sha": "b0e87ba2663225b699c31251ba99db07166a8d62",
+  "packages": {
+    ".": {
+      "release-type": "simple",
+      "package-name": "ohpygossh",
+      "extra-files": [
+        "setup.py",
+        "setup_ci.py",
+        "README.md",
+        "build-scripts/ci-build.sh",
+        "make_and_validate_script.sh",
+        "only_validate.sh",
+        {
+          "path": "pyproject.toml",
+          "type": "toml",
+          "jsonpath": "$.tool.poetry.version"
+        }
+      ]
+    }
+  },
+  "changelog-sections": [
+    { "type": "feat", "section": "Features", "hidden": false },
+    { "type": "fix", "section": "Bug Fixes", "hidden": false },
+    { "type": "perf", "section": "Performance Improvements", "hidden": false },
+    { "type": "revert", "section": "Reverts", "hidden": false },
+    { "type": "docs", "section": "Documentation", "hidden": false },
+    { "type": "refactor", "section": "Code Refactoring", "hidden": false },
+    { "type": "build", "section": "Build System", "hidden": false },
+    { "type": "style", "section": "Styles", "hidden": true },
+    { "type": "chore", "section": "Miscellaneous Chores", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "ci", "section": "Continuous Integration", "hidden": true }
+  ]
+}
