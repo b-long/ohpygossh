@@ -27,9 +27,8 @@ func TestGenerateKeyPairAndCloudInit(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
-
-	if r.Err != "<nil>" {
+	r, err := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
+	if err != nil {
 		t.Fatal(err)
 	}
 
@@ -60,7 +59,10 @@ func TestGenerateKeysForSsh(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	r := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	r, err := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	if r.CloudUser != "test-user" {
 		t.Errorf("unexpected CloudUser: %s", r.CloudUser)
@@ -84,31 +86,22 @@ func TestGenerateKeysForSsh(t *testing.T) {
 }
 
 func TestGenerateShortUUID(t *testing.T) {
-	id, err := gohpygossh.GenerateShortUUID(4)
-	if err != nil {
-		t.Fatal(err)
+	for _, length := range []int{2, 4, 8, 16} {
+		t.Run(fmt.Sprintf("length-%d", length), func(t *testing.T) {
+			id, err := gohpygossh.GenerateShortUUID(length)
+			if err != nil {
+				t.Fatalf("GenerateShortUUID(%d) failed: %v", length, err)
+			}
+			if len(id) != length {
+				t.Errorf("GenerateShortUUID(%d) = %q; want length %d", length, id, length)
+			}
+		})
 	}
 
-	if len(id) != 4 {
-		t.Errorf("expected length 4, got %d", len(id))
-	}
-
-	id8, err := gohpygossh.GenerateShortUUID(8)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if len(id8) != 8 {
-		t.Errorf("expected length 8, got %d", len(id8))
-	}
-
-	id2, err := gohpygossh.GenerateShortUUID(4)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if id == id2 {
-		t.Error("expected two calls to produce different values")
+	id1, _ := gohpygossh.GenerateShortUUID(10)
+	id2, _ := gohpygossh.GenerateShortUUID(10)
+	if id1 == id2 {
+		t.Errorf("expected unique values from consecutive calls, both were %q", id1)
 	}
 }
 
@@ -119,7 +112,10 @@ func TestPublicKeyFile(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	r := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	r, err := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	auth := gohpygossh.PublicKeyFile(r.PrivKeyAbsPath)
 	if auth == nil {
@@ -140,9 +136,9 @@ func TestGenerateKeyPairAndCloudInit_Content(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 
 	cloudUser := "myuser"
-	r := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, cloudUser)
-	if r.Err != "<nil>" {
-		t.Fatalf("unexpected error: %s", r.Err)
+	r, err := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, cloudUser)
+	if err != nil {
+		t.Fatal(err)
 	}
 
 	content, err := os.ReadFile(r.CloudInitPath)
@@ -177,8 +173,8 @@ func TestRunWithMultipass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	r := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
-	if r.Err != "<nil>" {
+	r, err := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
+	if err != nil {
 		t.Fatal(err)
 	}
 

@@ -29,15 +29,12 @@ type KeysForSsh struct {
 	PublicKeyAbsPath string
 }
 
-func GenerateKeysForSsh(destinationDir string, cloudUser string) KeysForSsh {
-	// Generate a new SSH key pair
+func GenerateKeysForSsh(destinationDir string, cloudUser string) (KeysForSsh, error) {
 	fmt.Printf("Generating keypair for user: %s", cloudUser)
 
 	temp_file, err := os.CreateTemp(destinationDir, "id_rsa_test")
-
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysForSsh{}, err
 	}
 
 	privateKeyFileName := temp_file.Name()
@@ -45,46 +42,39 @@ func GenerateKeysForSsh(destinationDir string, cloudUser string) KeysForSsh {
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
-		fmt.Println(exec_cmd_err)
-		os.Exit(1)
+		return KeysForSsh{}, exec_cmd_err
 	}
 	fmt.Println(output)
 
-	publicKeyAbsPath, err := filepath.Abs("" + privateKeyFileName + ".pub")
+	publicKeyAbsPath, err := filepath.Abs(privateKeyFileName + ".pub")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysForSsh{}, err
 	}
 
 	privateKeyAbsPath, err := filepath.Abs(privateKeyFileName)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysForSsh{}, err
 	}
 
 	return KeysForSsh{
 		CloudUser:        cloudUser,
 		PublicKeyAbsPath: publicKeyAbsPath,
 		PrivKeyAbsPath:   privateKeyAbsPath,
-	}
+	}, nil
 }
 
 type KeysAndInit struct {
 	CloudInitPath string
 	SshKeyPath    string
 	CloudUser     string
-	Err           string
 }
 
-func GenerateKeyPairAndCloudInit(destinationDir string, cloudUser string) KeysAndInit {
-	// Generate a new SSH key pair
+func GenerateKeyPairAndCloudInit(destinationDir string, cloudUser string) (KeysAndInit, error) {
 	fmt.Printf("Generating keypair & cloud-init for user: %s", cloudUser)
 
 	temp_file, err := os.CreateTemp(destinationDir, "id_rsa_test")
-
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysAndInit{}, err
 	}
 
 	privateKeyFileName := temp_file.Name()
@@ -92,27 +82,22 @@ func GenerateKeyPairAndCloudInit(destinationDir string, cloudUser string) KeysAn
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
-		fmt.Println(exec_cmd_err)
-		os.Exit(1)
+		return KeysAndInit{}, exec_cmd_err
 	}
 	fmt.Println(output)
 
-	// Get the public SSH key (file content)
-	publicKey, err := os.ReadFile("" + privateKeyFileName + ".pub")
+	publicKey, err := os.ReadFile(privateKeyFileName + ".pub")
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysAndInit{}, err
 	}
 
-	// Create a new cloud-init file
 	cloud_init_file_path := fmt.Sprintf("%s/cloud-init.yaml", destinationDir)
 	cloudInitFile, err := os.Create(cloud_init_file_path)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysAndInit{}, err
 	}
+	defer cloudInitFile.Close()
 
-	// Write the cloud-init file
 	cloudInitFile.WriteString(`
 users:
 - name: ` + cloudUser + `
@@ -121,34 +106,27 @@ users:
   ssh_authorized_keys:
     - ` + strings.TrimSpace(string(publicKey)) + `
 `)
-	defer cloudInitFile.Close()
 
 	cloud_init_abs_path, err := filepath.Abs(cloudInitFile.Name())
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysAndInit{}, err
 	}
 
-	// publicKeyAbsPath, err := filepath.Abs("" + privateKeyFileName + ".pub")
 	privateKeyAbsPath, err := filepath.Abs(privateKeyFileName)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		return KeysAndInit{}, err
 	}
-	fmt.Println(privateKeyAbsPath)
 
-	// return cloud_init_abs_path, privateKeyAbsPath, err
 	return KeysAndInit{
 		CloudInitPath: cloud_init_abs_path,
 		SshKeyPath:    privateKeyAbsPath,
 		CloudUser:     cloudUser,
-		Err:           fmt.Sprint(err),
-	}
+	}, nil
 }
 
 func GenerateShortUUID(length int) (string, error) {
 	// Generate random bytes
-	randomBytes := make([]byte, length/3*4) // Adjust for base64 encoding
+	randomBytes := make([]byte, (length*3+3)/4)
 	_, err := rand.Read(randomBytes)
 	if err != nil {
 		return "", err
