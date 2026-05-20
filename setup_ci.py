@@ -87,9 +87,9 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     long_description=long_description,
     url="https://github.com/b-long/ohpygossh",
+    license="MIT",
     classifiers=[
         "Programming Language :: Python :: 3",
-        "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
     ],
     include_package_data=True,
