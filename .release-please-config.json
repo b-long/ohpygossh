@@ -10,11 +10,7 @@
         "setup.py",
         "setup_ci.py",
         "README.md",
-        {
-          "path": "pyproject.toml",
-          "type": "toml",
-          "jsonpath": "$.tool.poetry.version"
-        }
+        "pyproject.toml"
       ]
     }
   },
