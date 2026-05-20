@@ -10,9 +10,6 @@
         "setup.py",
         "setup_ci.py",
         "README.md",
-        "build-scripts/ci-build.sh",
-        "make_and_validate_script.sh",
-        "only_validate.sh",
         {
           "path": "pyproject.toml",
           "type": "toml",
