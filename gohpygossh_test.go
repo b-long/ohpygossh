@@ -73,8 +73,6 @@ func TestRunWithMultipass(t *testing.T) {
 	}
 
 	// FIXME: Use dynamic VM name
-	// short_id, _ := gohpygossh.GenerateShortUUID(4)
-	// dyn_vm_name := fmt.Sprintf("testvm%s", short_id)
 	dyn_vm_name := "myvm"
 
 	instance, err := multipass.LaunchV2(&multipass.LaunchReqV2{
