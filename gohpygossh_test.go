@@ -53,6 +53,65 @@ func TestGenerateKeyPairAndCloudInit(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 }
 
+func TestGenerateKeysForSsh(t *testing.T) {
+	tmpDir, err := os.MkdirTemp("", "keys-only-test")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	r := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+
+	if r.CloudUser != "test-user" {
+		t.Errorf("unexpected CloudUser: %s", r.CloudUser)
+	}
+
+	if !strings.Contains(r.PrivKeyAbsPath, "id_rsa") {
+		t.Errorf("unexpected PrivKeyAbsPath: %s", r.PrivKeyAbsPath)
+	}
+
+	if !strings.Contains(r.PublicKeyAbsPath, ".pub") {
+		t.Errorf("unexpected PublicKeyAbsPath: %s", r.PublicKeyAbsPath)
+	}
+
+	if _, err := os.Stat(r.PrivKeyAbsPath); err != nil {
+		t.Errorf("private key file not found: %s", r.PrivKeyAbsPath)
+	}
+
+	if _, err := os.Stat(r.PublicKeyAbsPath); err != nil {
+		t.Errorf("public key file not found: %s", r.PublicKeyAbsPath)
+	}
+}
+
+func TestGenerateShortUUID(t *testing.T) {
+	id, err := gohpygossh.GenerateShortUUID(4)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(id) != 4 {
+		t.Errorf("expected length 4, got %d", len(id))
+	}
+
+	id8, err := gohpygossh.GenerateShortUUID(8)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(id8) != 8 {
+		t.Errorf("expected length 8, got %d", len(id8))
+	}
+
+	id2, err := gohpygossh.GenerateShortUUID(4)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if id == id2 {
+		t.Error("expected two calls to produce different values")
+	}
+}
+
 func TestRunWithMultipass(t *testing.T) {
 	// Install go-multipass if not already installed
 	if _, err := exec.LookPath("multipass"); err != nil {
