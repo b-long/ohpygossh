@@ -1,5 +1,9 @@
 name: Release Please
 
+# PR titles are enforced to follow Conventional Commits by lint-pr-title.yaml.
+# When a PR is squash-merged, GitHub uses the PR title as the commit message,
+# so release-please can reliably parse commits on main to drive releases.
+
 on:
   push:
     branches:
