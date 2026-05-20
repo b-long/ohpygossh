@@ -18,7 +18,7 @@ jobs:
     uses: ./.github/workflows/lint-on-macos.yaml
 
   build:
-    runs-on: macos-13
+    runs-on: macos-latest
     permissions:
         contents: write
 
