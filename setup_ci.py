@@ -31,11 +31,15 @@ if sys.platform == "darwin":
     # on macos PYTHON_BINARY_PATH must be python bin installed from python.org or from brew
     PYTHON_BINARY = os.getenv("PYTHON_BINARY_PATH", sys.executable)
     if PYTHON_BINARY == sys.executable:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "pybindgen"])
+        subprocess.run([sys.executable, "-m", "pip", "install", "pybindgen"])
 else:
     # linux & windows
+    # cibuildwheel v3 invokes setup.py in a minimal isolated venv without pip to
+    # discover build requirements; run() instead of check_call() so the process
+    # doesn't abort when pip is unavailable. pybindgen is pre-installed via
+    # CIBW_BEFORE_BUILD in the actual build environment.
     PYTHON_BINARY = sys.executable
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "pybindgen"])
+    subprocess.run([sys.executable, "-m", "pip", "install", "pybindgen"])
 
 
 def _generate_path_with_gopath() -> str:
