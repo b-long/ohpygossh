@@ -3,8 +3,10 @@ This file serves as a test of ohpygossh.
 """
 
 import glob
-from shutil import copy
+import json
+from shutil import copy, which
 from pathlib import Path
+import os
 from os import listdir, chdir
 from os.path import join
 import subprocess
@@ -212,7 +214,91 @@ SSH result:
         raise RuntimeError("An unexpected error occurred testing ohpygossh") from e
 
 
+def _multipass_cmd() -> list:
+    """On Linux snap installs the multipassd socket is root-owned; prefix with sudo."""
+    if os.name != "nt" and os.geteuid() != 0 and which("sudo"):
+        return ["sudo", "multipass"]
+    return ["multipass"]
+
+
+def test_with_multipass():
+    if not which("multipass"):
+        print("multipass not installed, skipping test_with_multipass")
+        return
+
+    try:
+        print("Python validation starting, for 'test_with_multipass'")
+
+        from ohpygossh.gohpygossh import (
+            GenerateKeyPairAndCloudInit,
+            GenerateShortUUID,
+            Run,
+        )
+
+        short_id = GenerateShortUUID(4)
+        vm_name = f"ohpytest-{short_id}"
+        mp = _multipass_cmd()
+
+        # multipass snap AppArmor profile allows @{HOME}/** but not /tmp/**;
+        # create the temp dir under $HOME so the daemon can read the cloud-init file.
+        with tempfile.TemporaryDirectory(dir=Path.home()) as tmpDir:
+            kai = GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
+
+            print(f"Launching multipass VM: {vm_name}")
+            try:
+                subprocess.run(
+                    [
+                        *mp,
+                        "launch",
+                        "lts",
+                        "--name",
+                        vm_name,
+                        "--cpus",
+                        "1",
+                        "--memory",
+                        "1G",
+                        "--disk",
+                        "5G",
+                        "--cloud-init",
+                        kai.CloudInitPath,
+                    ],
+                    check=True,
+                )
+
+                info_result = subprocess.run(
+                    [*mp, "info", "--format", "json", vm_name],
+                    capture_output=True,
+                    text=True,
+                    check=True,
+                )
+                ip = json.loads(info_result.stdout)["info"][vm_name]["ipv4"][0]
+                print(f"VM IP: {ip}")
+
+                output = Run(
+                    ip, kai.CloudUser, kai.SshKeyPath, "echo 'Connection success'"
+                )
+
+                if "Connection success" not in output:
+                    raise RuntimeError(f"Unexpected SSH output: {output!r}")
+
+                print(f"Multipass e2e test passed. Output: {output!r}")
+
+            finally:
+                print(f"Deleting multipass VM: {vm_name}")
+                subprocess.run([*mp, "delete", "--purge", vm_name], check=False)
+
+    except Exception as e:
+        raise RuntimeError(
+            "An unexpected error occurred testing ohpygossh with multipass"
+        ) from e
+
+
 if __name__ == "__main__":
     test_say_hello()
 
-    test_with_keys_only()
+    test_with_multipass()
+
+    if which("vagrant"):
+        test_with_keys_only()
+    else:
+        print("vagrant not installed, skipping test_with_keys_only")
