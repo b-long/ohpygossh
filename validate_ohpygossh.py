@@ -236,7 +236,7 @@ def test_with_multipass():
         )
 
         short_id = GenerateShortUUID(4)
-        vm_name = f"ohpytest-{short_id}"
+        vm_name = f"ohpytest-{short_id}".lower()
         mp = _multipass_cmd()
 
         # multipass snap AppArmor profile allows @{HOME}/** but not /tmp/**;
@@ -271,7 +271,14 @@ def test_with_multipass():
                     text=True,
                     check=True,
                 )
-                ip = json.loads(info_result.stdout)["info"][vm_name]["ipv4"][0]
+                info_data = json.loads(info_result.stdout)
+                vm_info = info_data.get("info", {}).get(vm_name, {})
+                ipv4_addresses = vm_info.get("ipv4", [])
+                if not ipv4_addresses:
+                    raise RuntimeError(
+                        f"No IPv4 address found for VM {vm_name}. Info: {info_data}"
+                    )
+                ip = ipv4_addresses[0]
                 print(f"VM IP: {ip}")
 
                 output = Run(
