@@ -207,9 +207,7 @@ func TestRunWithMultipass(t *testing.T) {
 	}
 
 	// Execute the 'ls' command on the remote server
-	// FIXME: 'cloud-user' is a magic string, we should pass into
-	// the 'GenerateKeyPaiirAndCloudInit()' function
-	output, err := gohpygossh.Run(hostname, "cloud-user", r.SshKeyPath, "echo 'Connection success'")
+	output, err := gohpygossh.Run(hostname, r.CloudUser, r.SshKeyPath, "echo 'Connection success'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -219,7 +217,7 @@ func TestRunWithMultipass(t *testing.T) {
 		t.Error("Expected 'Connection success' in output but found:", output)
 	}
 
-	// TODO: What exactly does this do?
+	// Purge the VM immediately so it doesn't linger in the deleted-but-not-purged state.
 	defer multipass.Delete(&multipass.DeleteRequest{Name: dyn_vm_name})
 	defer os.RemoveAll(tmpDir)
 
