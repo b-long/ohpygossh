@@ -3,6 +3,7 @@ This file serves as a test of ohpygossh.
 """
 
 import glob
+import sys
 import json
 from shutil import copy, which
 from pathlib import Path
@@ -216,7 +217,7 @@ SSH result:
 
 def _multipass_cmd() -> list:
     """On Linux snap installs the multipassd socket is root-owned; prefix with sudo."""
-    if os.name != "nt" and os.geteuid() != 0 and which("sudo"):
+    if sys.platform == "linux" and os.geteuid() != 0 and which("sudo"):
         return ["sudo", "multipass"]
     return ["multipass"]
 
