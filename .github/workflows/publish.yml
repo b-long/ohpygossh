@@ -6,10 +6,8 @@ name: PyPIBuild
 
 
 on:
-    workflow_run:
-        workflows: ["Release Please"]
-        types:
-            - completed
+    release:
+        types: [published]
     workflow_dispatch:
 
 jobs:
@@ -267,7 +265,7 @@ jobs:
       id-token: write
     needs: [build_macos, build_linux_x86_64, build_linux_arm]
     runs-on: ubuntu-22.04
-    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'release' || github.event_name == 'workflow_dispatch' }}
 
     steps:
         - uses: actions/checkout@v4
