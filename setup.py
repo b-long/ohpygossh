@@ -14,6 +14,7 @@ Based on:
 
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
+version = (this_directory / "version.txt").read_text().strip()
 PACKAGE_PATH = "gohpygossh"
 PACKAGE_NAME = "ohpygossh"
 
@@ -25,8 +26,7 @@ setuptools.setup(
     long_description_content_type="text/markdown",
     url="https://github.com/b-long/ohpygossh",
     package_data={PACKAGE_NAME: ["*.so"]},
-    # Should match 'pyproject.toml' version number
-    version="0.0.16",
+    version=version,
     author_email="b-long@users.noreply.github.com",
     include_package_data=True,
 )
