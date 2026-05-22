@@ -26,3 +26,9 @@ jobs:
           config-file: .release-please-config.json
           manifest-file: .release-please-manifest.json
           token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trigger publish workflow
+        if: ${{ steps.release.outputs.releases_created }}
+        run: gh workflow run publish.yml
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
