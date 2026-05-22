@@ -29,6 +29,6 @@ jobs:
 
       - name: Trigger publish workflow
         if: ${{ steps.release.outputs.releases_created }}
-        run: gh workflow run publish.yml
+        run: gh workflow run publish.yml --repo ${{ github.repository }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
