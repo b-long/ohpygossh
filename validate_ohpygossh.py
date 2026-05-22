@@ -12,6 +12,7 @@ from os import listdir, chdir
 from os.path import join
 import subprocess
 import tempfile
+import time
 from shlex import split
 
 GIT_ROOT = Path(__file__).parent.resolve()
@@ -249,24 +250,31 @@ def test_with_multipass():
 
             print(f"Launching multipass VM: {vm_name}")
             try:
-                subprocess.run(
-                    [
-                        *mp,
-                        "launch",
-                        "lts",
-                        "--name",
-                        vm_name,
-                        "--cpus",
-                        "1",
-                        "--memory",
-                        "1G",
-                        "--disk",
-                        "5G",
-                        "--cloud-init",
-                        kai.CloudInitPath,
-                    ],
-                    check=True,
-                )
+                launch_cmd = [
+                    *mp,
+                    "launch",
+                    "lts",
+                    "--name",
+                    vm_name,
+                    "--cpus",
+                    "1",
+                    "--memory",
+                    "1G",
+                    "--disk",
+                    "5G",
+                    "--cloud-init",
+                    kai.CloudInitPath,
+                ]
+                for attempt, wait in enumerate([0, 10, 30, 90]):
+                    if wait:
+                        print(
+                            f"Launch attempt {attempt} failed, retrying in {wait}s..."
+                        )
+                        time.sleep(wait)
+                    if subprocess.run(launch_cmd).returncode == 0:
+                        break
+                else:
+                    raise RuntimeError("multipass launch failed after 4 attempts")
 
                 info_result = subprocess.run(
                     [*mp, "info", "--format", "json", vm_name],
