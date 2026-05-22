@@ -1,5 +1,18 @@
 # Changelog
 
+## [0.3.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.2.0...ohpygossh-v0.3.0) (2026-05-22)
+
+
+### Features
+
+* add SFTP Upload and Download functions ([#26](https://github.com/b-long/ohpygossh/issues/26)) ([0cf669b](https://github.com/b-long/ohpygossh/commit/0cf669b0acef3424180e4c68a552c7591de4caaf))
+
+
+### Bug Fixes
+
+* PyPI publishing & tidy go-multipass tests ([#24](https://github.com/b-long/ohpygossh/issues/24)) ([5df9c8b](https://github.com/b-long/ohpygossh/commit/5df9c8bf47c83dad88b25d751cad5842de2c2bb5))
+* sync pyproject.toml to 0.2.0, fix extra-files ([#27](https://github.com/b-long/ohpygossh/issues/27)) ([40ca820](https://github.com/b-long/ohpygossh/commit/40ca820adb0af974eabdedb8f56a63fbecc90bb7))
+
 ## [0.2.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.1.0...ohpygossh-v0.2.0) (2026-05-21)
 
 
