@@ -70,11 +70,11 @@ def test_with_keys_only():
     try:
         print("Python validation starting, for 'test_with_keys_only'")
 
-        from ohpygossh.gohpygossh import GenerateKeysForSsh, KeysForSsh
+        from ohpygossh.gohpygossh import GenerateKeysForSSH, KeysForSSH
 
         with tempfile.TemporaryDirectory() as tmpDir:
             print("'ohpygossh': Generating SSH key pair")
-            keys: KeysForSsh = GenerateKeysForSsh(tmpDir, keys_only_user)
+            keys: KeysForSSH = GenerateKeysForSSH(tmpDir, keys_only_user)
 
             print(
                 f"""

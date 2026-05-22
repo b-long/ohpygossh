@@ -25,18 +25,18 @@ func Hello() string {
 	return "Hello, world"
 }
 
-type KeysForSsh struct {
+type KeysForSSH struct {
 	CloudUser        string
 	PrivKeyAbsPath   string
 	PublicKeyAbsPath string
 }
 
-func GenerateKeysForSsh(destinationDir string, cloudUser string) (KeysForSsh, error) {
+func GenerateKeysForSSH(destinationDir, cloudUser string) (KeysForSSH, error) {
 	fmt.Printf("Generating keypair for user: %s", cloudUser)
 
 	temp_file, err := os.CreateTemp(destinationDir, "id_rsa_test")
 	if err != nil {
-		return KeysForSsh{}, err
+		return KeysForSSH{}, err
 	}
 
 	privateKeyFileName := temp_file.Name()
@@ -44,21 +44,21 @@ func GenerateKeysForSsh(destinationDir string, cloudUser string) (KeysForSsh, er
 
 	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
 	if exec_cmd_err != nil {
-		return KeysForSsh{}, exec_cmd_err
+		return KeysForSSH{}, exec_cmd_err
 	}
 	fmt.Println(output)
 
 	publicKeyAbsPath, err := filepath.Abs(privateKeyFileName + ".pub")
 	if err != nil {
-		return KeysForSsh{}, err
+		return KeysForSSH{}, err
 	}
 
 	privateKeyAbsPath, err := filepath.Abs(privateKeyFileName)
 	if err != nil {
-		return KeysForSsh{}, err
+		return KeysForSSH{}, err
 	}
 
-	return KeysForSsh{
+	return KeysForSSH{
 		CloudUser:        cloudUser,
 		PublicKeyAbsPath: publicKeyAbsPath,
 		PrivKeyAbsPath:   privateKeyAbsPath,
@@ -71,7 +71,7 @@ type KeysAndInit struct {
 	CloudUser     string
 }
 
-func GenerateKeyPairAndCloudInit(destinationDir string, cloudUser string) (KeysAndInit, error) {
+func GenerateKeyPairAndCloudInit(destinationDir, cloudUser string) (KeysAndInit, error) {
 	fmt.Printf("Generating keypair & cloud-init for user: %s", cloudUser)
 
 	temp_file, err := os.CreateTemp(destinationDir, "id_rsa_test")
@@ -153,76 +153,48 @@ func PublicKeyFile(file string) ssh.AuthMethod {
 	return ssh.PublicKeys(key)
 }
 
-func Run(hostname string, username string, privateKey string, command string) (string, error) {
-	// envVars map[string]string) string {
-	// Establish an SSH connection to the remote server
-	// key1, err := ssh.ParsePrivateKey([]byte(privateKey))
+// newSSHClient dials an SSH connection using private-key authentication.
+// FIXME: host key verification is not yet implemented; connections are
+// currently vulnerable to MITM. See https://stackoverflow.com/a/63308243
+func newSSHClient(hostname, username, privateKey string) (*ssh.Client, error) {
 	keyBytes, err := os.ReadFile(privateKey)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	signer, err := ssh.ParsePrivateKey(keyBytes)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	sshConfig := &ssh.ClientConfig{
-		User: username,
-		Auth: []ssh.AuthMethod{
-			ssh.PublicKeys(signer),
-		},
-		/*
-
-			FIXME: Work on supporting host key verification.
-
-			See: https://stackoverflow.com/a/63308243
-
-		*/
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		// Env: envVars,
-		// env: envVars,
-		Timeout: time.Duration(time.Duration.Seconds(60)),
+	cfg := &ssh.ClientConfig{
+		User:            username,
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(), //nolint:gosec // known limitation, see FIXME above
+		Timeout:         60 * time.Second,
 	}
+	return ssh.Dial("tcp", net.JoinHostPort(hostname, "22"), cfg)
+}
 
-	client, err := ssh.Dial("tcp", net.JoinHostPort(hostname, "22"), sshConfig)
+func Run(hostname, username, privateKey, command string) (string, error) {
+	client, err := newSSHClient(hostname, username, privateKey)
 	if err != nil {
 		return "", err
 	}
-	// Create a session. It is one session per command.
+	defer client.Close()
+
 	session, err := client.NewSession()
 	if err != nil {
 		return "", err
 	}
 	defer session.Close()
-	var b bytes.Buffer  // import "bytes"
-	session.Stdout = &b // get output
-	// you can also pass what gets input to the stdin, allowing you to pipe
-	// content from client to server
-	//      session.Stdin = bytes.NewBufferString("My input")
 
-	// Finally, run the command
+	var b bytes.Buffer
+	session.Stdout = &b
 	err = session.Run(command)
 	return b.String(), err
 }
 
-func Upload(hostname string, username string, privateKey string, localPath string, remotePath string) error {
-	keyBytes, err := os.ReadFile(privateKey)
-	if err != nil {
-		return err
-	}
-	signer, err := ssh.ParsePrivateKey(keyBytes)
-	if err != nil {
-		return err
-	}
-
-	sshConfig := &ssh.ClientConfig{
-		User:            username,
-		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         time.Duration(time.Duration.Seconds(60)),
-	}
-
-	client, err := ssh.Dial("tcp", net.JoinHostPort(hostname, "22"), sshConfig)
+func Upload(hostname, username, privateKey, localPath, remotePath string) error {
+	client, err := newSSHClient(hostname, username, privateKey)
 	if err != nil {
 		return err
 	}
@@ -244,30 +216,16 @@ func Upload(hostname string, username string, privateKey string, localPath strin
 	if err != nil {
 		return err
 	}
-	defer remoteFile.Close()
 
-	_, err = io.Copy(remoteFile, localFile)
-	return err
+	if _, err = io.Copy(remoteFile, localFile); err != nil {
+		remoteFile.Close()
+		return err
+	}
+	return remoteFile.Close()
 }
 
-func Download(hostname string, username string, privateKey string, remotePath string, localPath string) error {
-	keyBytes, err := os.ReadFile(privateKey)
-	if err != nil {
-		return err
-	}
-	signer, err := ssh.ParsePrivateKey(keyBytes)
-	if err != nil {
-		return err
-	}
-
-	sshConfig := &ssh.ClientConfig{
-		User:            username,
-		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		Timeout:         time.Duration(time.Duration.Seconds(60)),
-	}
-
-	client, err := ssh.Dial("tcp", net.JoinHostPort(hostname, "22"), sshConfig)
+func Download(hostname, username, privateKey, remotePath, localPath string) error {
+	client, err := newSSHClient(hostname, username, privateKey)
 	if err != nil {
 		return err
 	}
@@ -289,8 +247,10 @@ func Download(hostname string, username string, privateKey string, remotePath st
 	if err != nil {
 		return err
 	}
-	defer localFile.Close()
 
-	_, err = io.Copy(localFile, remoteFile)
-	return err
+	if _, err = io.Copy(localFile, remoteFile); err != nil {
+		localFile.Close()
+		return err
+	}
+	return localFile.Close()
 }

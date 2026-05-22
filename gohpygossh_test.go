@@ -52,14 +52,14 @@ func TestGenerateKeyPairAndCloudInit(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 }
 
-func TestGenerateKeysForSsh(t *testing.T) {
+func TestGenerateKeysForSSH(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "keys-only-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	r, err := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	r, err := gohpygossh.GenerateKeysForSSH(tmpDir, "test-user")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestPublicKeyFile(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	r, err := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	r, err := gohpygossh.GenerateKeysForSSH(tmpDir, "test-user")
 	if err != nil {
 		t.Fatal(err)
 	}
