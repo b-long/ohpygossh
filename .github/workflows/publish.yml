@@ -77,30 +77,6 @@ jobs:
             GOARCH=${{ matrix.arch_cibw_go[1] }}
             CC=/tmp/cc-wrapper.sh
 
-      - name: Setup colima
-        run: |
-            brew install colima docker
-            colima start
-
-      - name: Verify docker Installation
-        run: |
-            docker --version
-            docker ps
-
-      - name: Setup vagrant
-        run: |
-            brew install vagrant
-            vagrant --version
-
-      # FIXME: Test before uploading
-      # - name: Test Python wheel
-      #   run: |
-      #       # Test wheel installation
-      #       /usr/local/bin/python_for_build -m pip install wheelhouse/*.whl
-
-      #       # Test wheel functionality
-      #       /usr/local/bin/python_for_build validate_ohpygossh.py
-
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -139,30 +115,6 @@ jobs:
             go install github.com/go-python/gopy@v0.4.10
             go install golang.org/x/tools/cmd/goimports@latest
 
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Install Vagrant
-        run: |
-          wget -O - https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-          echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
-          sudo apt update && sudo apt install vagrant
-
-      - name: Verify docker and vagrant installation
-        run: |
-            docker --version
-            docker ps
-            vagrant --version
-
-      # FIXME: Test before uploading
-      # - name: Test Python wheel
-      #   run: |
-      #       # Test wheel installation
-      #       python3 -m pip install wheelhouse/*.whl
-
-      #       # Test wheel functionality
-      #       python3 validate_ohpygossh.py
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
