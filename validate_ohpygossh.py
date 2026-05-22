@@ -231,9 +231,11 @@ def test_with_multipass():
         print("Python validation starting, for 'test_with_multipass'")
 
         from ohpygossh.gohpygossh import (
+            Download,
             GenerateKeyPairAndCloudInit,
             GenerateShortUUID,
             Run,
+            Upload,
         )
 
         short_id = GenerateShortUUID(4)
@@ -289,7 +291,39 @@ def test_with_multipass():
                 if "Connection success" not in output:
                     raise RuntimeError(f"Unexpected SSH output: {output!r}")
 
-                print(f"Multipass e2e test passed. Output: {output!r}")
+                print(f"Run e2e test passed. Output: {output!r}")
+
+                # SFTP round-trip: upload a file, verify it landed, download it back.
+                unique_marker = GenerateShortUUID(8)
+                upload_content = f"ohpygossh-sftp-test:{unique_marker}\n"
+                local_upload = os.path.join(tmpDir, "upload.txt")
+                remote_path = f"/home/{kai.CloudUser}/uploaded.txt"
+                local_download = os.path.join(tmpDir, "download.txt")
+
+                Path(local_upload).write_text(upload_content)
+
+                Upload(ip, kai.CloudUser, kai.SshKeyPath, local_upload, remote_path)
+                print(f"Upload complete: {local_upload} -> {remote_path}")
+
+                cat_output = Run(
+                    ip, kai.CloudUser, kai.SshKeyPath, f"cat {remote_path}"
+                )
+                if cat_output.strip() != upload_content.strip():
+                    raise RuntimeError(
+                        f"Remote file content mismatch after upload. Got: {cat_output!r}"
+                    )
+                print("Remote file content verified via Run/cat.")
+
+                Download(ip, kai.CloudUser, kai.SshKeyPath, remote_path, local_download)
+                print(f"Download complete: {remote_path} -> {local_download}")
+
+                downloaded_content = Path(local_download).read_text()
+                if downloaded_content != upload_content:
+                    raise RuntimeError(
+                        f"Downloaded content does not match original. Got: {downloaded_content!r}"
+                    )
+
+                print(f"SFTP round-trip e2e test passed. Marker: {unique_marker!r}")
 
             finally:
                 print(f"Deleting multipass VM: {vm_name}")

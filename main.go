@@ -9,6 +9,7 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"fmt"
+	"io"
 	"net"
 	"os"
 	"os/exec"
@@ -16,6 +17,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -201,4 +203,94 @@ func Run(hostname string, username string, privateKey string, command string) (s
 	// Finally, run the command
 	err = session.Run(command)
 	return b.String(), err
+}
+
+func Upload(hostname string, username string, privateKey string, localPath string, remotePath string) error {
+	keyBytes, err := os.ReadFile(privateKey)
+	if err != nil {
+		return err
+	}
+	signer, err := ssh.ParsePrivateKey(keyBytes)
+	if err != nil {
+		return err
+	}
+
+	sshConfig := &ssh.ClientConfig{
+		User:            username,
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Duration(time.Duration.Seconds(60)),
+	}
+
+	client, err := ssh.Dial("tcp", net.JoinHostPort(hostname, "22"), sshConfig)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	sftpClient, err := sftp.NewClient(client)
+	if err != nil {
+		return err
+	}
+	defer sftpClient.Close()
+
+	localFile, err := os.Open(localPath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	remoteFile, err := sftpClient.Create(remotePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	_, err = io.Copy(remoteFile, localFile)
+	return err
+}
+
+func Download(hostname string, username string, privateKey string, remotePath string, localPath string) error {
+	keyBytes, err := os.ReadFile(privateKey)
+	if err != nil {
+		return err
+	}
+	signer, err := ssh.ParsePrivateKey(keyBytes)
+	if err != nil {
+		return err
+	}
+
+	sshConfig := &ssh.ClientConfig{
+		User:            username,
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		Timeout:         time.Duration(time.Duration.Seconds(60)),
+	}
+
+	client, err := ssh.Dial("tcp", net.JoinHostPort(hostname, "22"), sshConfig)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	sftpClient, err := sftp.NewClient(client)
+	if err != nil {
+		return err
+	}
+	defer sftpClient.Close()
+
+	remoteFile, err := sftpClient.Open(remotePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	localFile, err := os.Create(localPath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	_, err = io.Copy(localFile, remoteFile)
+	return err
 }
