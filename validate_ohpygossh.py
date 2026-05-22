@@ -239,7 +239,7 @@ def test_with_multipass():
         )
 
         short_id = GenerateShortUUID(4)
-        vm_name = f"ohpytest-{short_id}".lower()
+        vm_name = f"ohpytest-{short_id}".lower().replace("_", "-")
         mp = _multipass_cmd()
 
         # multipass snap AppArmor profile allows @{HOME}/** but not /tmp/**;
