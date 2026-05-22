@@ -38,15 +38,13 @@ func GenerateKeysForSSH(destinationDir, cloudUser string) (KeysForSSH, error) {
 	if err != nil {
 		return KeysForSSH{}, err
 	}
-
 	privateKeyFileName := temp_file.Name()
-	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f %s <<<y >/dev/null 2>&1", privateKeyFileName)
+	temp_file.Close()
+	os.Remove(privateKeyFileName)
 
-	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
-	if exec_cmd_err != nil {
-		return KeysForSSH{}, exec_cmd_err
+	if err := exec.Command("ssh-keygen", "-b", "2048", "-t", "rsa", "-q", "-N", "", "-f", privateKeyFileName).Run(); err != nil {
+		return KeysForSSH{}, err
 	}
-	fmt.Println(output)
 
 	publicKeyAbsPath, err := filepath.Abs(privateKeyFileName + ".pub")
 	if err != nil {
@@ -78,15 +76,13 @@ func GenerateKeyPairAndCloudInit(destinationDir, cloudUser string) (KeysAndInit,
 	if err != nil {
 		return KeysAndInit{}, err
 	}
-
 	privateKeyFileName := temp_file.Name()
-	cmd := fmt.Sprintf("ssh-keygen -b 2048 -t rsa -q -N '' -f %s <<<y >/dev/null 2>&1", privateKeyFileName)
+	temp_file.Close()
+	os.Remove(privateKeyFileName)
 
-	output, exec_cmd_err := exec.Command("bash", "-c", cmd).Output()
-	if exec_cmd_err != nil {
-		return KeysAndInit{}, exec_cmd_err
+	if err := exec.Command("ssh-keygen", "-b", "2048", "-t", "rsa", "-q", "-N", "", "-f", privateKeyFileName).Run(); err != nil {
+		return KeysAndInit{}, err
 	}
-	fmt.Println(output)
 
 	publicKey, err := os.ReadFile(privateKeyFileName + ".pub")
 	if err != nil {
@@ -219,6 +215,7 @@ func Upload(hostname, username, privateKey, localPath, remotePath string) error 
 
 	if _, err = io.Copy(remoteFile, localFile); err != nil {
 		remoteFile.Close()
+		_ = sftpClient.Remove(remotePath)
 		return err
 	}
 	return remoteFile.Close()
@@ -250,6 +247,7 @@ func Download(hostname, username, privateKey, remotePath, localPath string) erro
 
 	if _, err = io.Copy(localFile, remoteFile); err != nil {
 		localFile.Close()
+		_ = os.Remove(localPath)
 		return err
 	}
 	return localFile.Close()
