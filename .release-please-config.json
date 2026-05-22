@@ -7,9 +7,6 @@
       "release-type": "simple",
       "package-name": "ohpygossh",
       "extra-files": [
-        "setup.py",
-        "setup_ci.py",
-        "README.md",
         "pyproject.toml"
       ]
     }
