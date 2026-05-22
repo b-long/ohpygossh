@@ -9,7 +9,7 @@ A project to create a new cross-platform SSH wheel for Python.
 
 1. An easy to install, multi-platform SSH wheel
 1. Personal learning about Go
-1. To explore [`gopy`](https://github.com/go-python/gopys)
+1. To explore [`gopy`](https://github.com/go-python/gopy)
 1. To explore Python packaging & compiling.  What can we
 do with available open source tooling?
 1. To explore performance characteristics
@@ -18,17 +18,17 @@ do with available open source tooling?
 
 1. Respect and give kudos to all the work that's come
 before.
-    1. In particular, the Herculian efforts of [`gopy`], [`paramiko`] and [`asyncssh`].
+    1. In particular, the Herculean efforts of [`gopy`], [`paramiko`] and [`asyncssh`].
     1. Please also be kind to all other open-source software projects you find.
 
 It is paramount that we all play nicely.  To that end, please do your very best
 not to create churn or spur conversations that may upset other developers,
-and/or cause debate without offerinig solutions.
+and/or cause debate without offering solutions.
 
 ## Build wheel
 
 The following steps should produce a wheel,
-located at `dist/ohpygossh-0.0.16-py3-none-any.whl`
+located at `dist/ohpygossh-<version>-py3-none-any.whl`
 
 ```bash
 ./make_and_validate_script.sh
