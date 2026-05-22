@@ -52,14 +52,14 @@ func TestGenerateKeyPairAndCloudInit(t *testing.T) {
 	defer os.RemoveAll(tmpDir)
 }
 
-func TestGenerateKeysForSsh(t *testing.T) {
+func TestGenerateKeysForSSH(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "keys-only-test")
 	if err != nil {
 		t.Fatal(err)
 	}
 	defer os.RemoveAll(tmpDir)
 
-	r, err := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	r, err := gohpygossh.GenerateKeysForSSH(tmpDir, "test-user")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -112,7 +112,7 @@ func TestPublicKeyFile(t *testing.T) {
 	}
 	defer os.RemoveAll(tmpDir)
 
-	r, err := gohpygossh.GenerateKeysForSsh(tmpDir, "test-user")
+	r, err := gohpygossh.GenerateKeysForSSH(tmpDir, "test-user")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -179,13 +179,13 @@ func TestRunWithMultipass(t *testing.T) {
 	}
 
 	shortID, _ := gohpygossh.GenerateShortUUID(4)
-	dyn_vm_name := fmt.Sprintf("testvm%s", shortID)
+	dynVMName := fmt.Sprintf("testvm%s", strings.ToLower(strings.ReplaceAll(shortID, "_", "-")))
 
 	instance, err := multipass.LaunchV2(&multipass.LaunchReqV2{
 		Image:         "lts",
 		CPUS:          "2",
 		Disk:          "10g",
-		Name:          dyn_vm_name,
+		Name:          dynVMName,
 		Memory:        "3g",
 		CloudInitFile: r.CloudInitPath,
 	})
@@ -194,12 +194,12 @@ func TestRunWithMultipass(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Delete runs "multipass delete --purge", fully removing the VM when the test ends.
-	defer multipass.Delete(&multipass.DeleteRequest{Name: dyn_vm_name})
+	defer func() { _ = multipass.Delete(&multipass.DeleteRequest{Name: dynVMName}) }()
 
 	// Get the hostname of the multipass instance
 	fmt.Println(instance.IP)
 
-	info, err := multipass.Info(&multipass.InfoRequest{Name: dyn_vm_name})
+	info, err := multipass.Info(&multipass.InfoRequest{Name: dynVMName})
 	hostname := info.IP
 	if err != nil {
 		t.Fatal(err)

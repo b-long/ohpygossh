@@ -12,6 +12,7 @@ from os import listdir, chdir
 from os.path import join
 import subprocess
 import tempfile
+import time
 from shlex import split
 
 GIT_ROOT = Path(__file__).parent.resolve()
@@ -69,11 +70,11 @@ def test_with_keys_only():
     try:
         print("Python validation starting, for 'test_with_keys_only'")
 
-        from ohpygossh.gohpygossh import GenerateKeysForSsh, KeysForSsh
+        from ohpygossh.gohpygossh import GenerateKeysForSSH, KeysForSSH
 
         with tempfile.TemporaryDirectory() as tmpDir:
             print("'ohpygossh': Generating SSH key pair")
-            keys: KeysForSsh = GenerateKeysForSsh(tmpDir, keys_only_user)
+            keys: KeysForSSH = GenerateKeysForSSH(tmpDir, keys_only_user)
 
             print(
                 f"""
@@ -231,13 +232,15 @@ def test_with_multipass():
         print("Python validation starting, for 'test_with_multipass'")
 
         from ohpygossh.gohpygossh import (
+            Download,
             GenerateKeyPairAndCloudInit,
             GenerateShortUUID,
             Run,
+            Upload,
         )
 
         short_id = GenerateShortUUID(4)
-        vm_name = f"ohpytest-{short_id}".lower()
+        vm_name = f"ohpytest-{short_id}".lower().replace("_", "-")
         mp = _multipass_cmd()
 
         # multipass snap AppArmor profile allows @{HOME}/** but not /tmp/**;
@@ -247,24 +250,31 @@ def test_with_multipass():
 
             print(f"Launching multipass VM: {vm_name}")
             try:
-                subprocess.run(
-                    [
-                        *mp,
-                        "launch",
-                        "lts",
-                        "--name",
-                        vm_name,
-                        "--cpus",
-                        "1",
-                        "--memory",
-                        "1G",
-                        "--disk",
-                        "5G",
-                        "--cloud-init",
-                        kai.CloudInitPath,
-                    ],
-                    check=True,
-                )
+                launch_cmd = [
+                    *mp,
+                    "launch",
+                    "lts",
+                    "--name",
+                    vm_name,
+                    "--cpus",
+                    "1",
+                    "--memory",
+                    "1G",
+                    "--disk",
+                    "5G",
+                    "--cloud-init",
+                    kai.CloudInitPath,
+                ]
+                for attempt, wait in enumerate([0, 10, 30, 90]):
+                    if wait:
+                        print(
+                            f"Launch attempt {attempt} failed, retrying in {wait}s..."
+                        )
+                        time.sleep(wait)
+                    if subprocess.run(launch_cmd).returncode == 0:
+                        break
+                else:
+                    raise RuntimeError("multipass launch failed after 4 attempts")
 
                 info_result = subprocess.run(
                     [*mp, "info", "--format", "json", vm_name],
@@ -289,7 +299,39 @@ def test_with_multipass():
                 if "Connection success" not in output:
                     raise RuntimeError(f"Unexpected SSH output: {output!r}")
 
-                print(f"Multipass e2e test passed. Output: {output!r}")
+                print(f"Run e2e test passed. Output: {output!r}")
+
+                # SFTP round-trip: upload a file, verify it landed, download it back.
+                unique_marker = GenerateShortUUID(8)
+                upload_content = f"ohpygossh-sftp-test:{unique_marker}\n"
+                local_upload = os.path.join(tmpDir, "upload.txt")
+                remote_path = f"/home/{kai.CloudUser}/uploaded.txt"
+                local_download = os.path.join(tmpDir, "download.txt")
+
+                Path(local_upload).write_text(upload_content)
+
+                Upload(ip, kai.CloudUser, kai.SshKeyPath, local_upload, remote_path)
+                print(f"Upload complete: {local_upload} -> {remote_path}")
+
+                cat_output = Run(
+                    ip, kai.CloudUser, kai.SshKeyPath, f"cat {remote_path}"
+                )
+                if cat_output.strip() != upload_content.strip():
+                    raise RuntimeError(
+                        f"Remote file content mismatch after upload. Got: {cat_output!r}"
+                    )
+                print("Remote file content verified via Run/cat.")
+
+                Download(ip, kai.CloudUser, kai.SshKeyPath, remote_path, local_download)
+                print(f"Download complete: {remote_path} -> {local_download}")
+
+                downloaded_content = Path(local_download).read_text()
+                if downloaded_content != upload_content:
+                    raise RuntimeError(
+                        f"Downloaded content does not match original. Got: {downloaded_content!r}"
+                    )
+
+                print(f"SFTP round-trip e2e test passed. Marker: {unique_marker!r}")
 
             finally:
                 print(f"Deleting multipass VM: {vm_name}")
