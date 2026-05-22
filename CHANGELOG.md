@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.1](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.3.0...ohpygossh-v0.3.1) (2026-05-22)
+
+
+### Bug Fixes
+
+* add actions: write permission to dispatch publish workflow ([#31](https://github.com/b-long/ohpygossh/issues/31)) ([731e93a](https://github.com/b-long/ohpygossh/commit/731e93af4ac28770f5afbb67b7e763ee5778ce82))
+* pass --repo to gh workflow run to avoid missing git context ([#30](https://github.com/b-long/ohpygossh/issues/30)) ([ccfb0c6](https://github.com/b-long/ohpygossh/commit/ccfb0c67f0e4a761909d88b20fdde39590c5858e))
+* remove colima, docker, and vagrant steps from publish workflow ([#32](https://github.com/b-long/ohpygossh/issues/32)) ([fd6dee2](https://github.com/b-long/ohpygossh/commit/fd6dee25b348e2911f69ab94f5eb9278eb457e58))
+* trigger publish via workflow_dispatch from release-please ([#28](https://github.com/b-long/ohpygossh/issues/28)) ([3b3e254](https://github.com/b-long/ohpygossh/commit/3b3e254a92c013c9624c540dc11226d701c4edfa))
+
 ## [0.3.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.2.0...ohpygossh-v0.3.0) (2026-05-22)
 
 
