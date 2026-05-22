@@ -14,7 +14,7 @@ Based on:
 
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
-version = (this_directory / "version.txt").read_text().strip()
+version = (this_directory / "version.txt").read_text(encoding="utf-8").strip()
 PACKAGE_PATH = "gohpygossh"
 PACKAGE_NAME = "ohpygossh"
 
