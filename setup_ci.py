@@ -82,10 +82,11 @@ class CustomBuildExt(build_ext):
 
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text()
+version = (this_directory / "version.txt").read_text().strip()
 
 setuptools.setup(
     name=PACKAGE_NAME,
-    version="0.0.16",
+    version=version,
     author="b-long",
     description="A project to create a new cross-platform SSH wheel for Python.",
     long_description_content_type="text/markdown",

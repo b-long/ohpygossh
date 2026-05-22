@@ -168,10 +168,10 @@ func TestRunWithMultipass(t *testing.T) {
 
 	// Create a temporary directory for multipass operations
 	tmpDir, err := os.MkdirTemp("", "multipass-test2")
-
 	if err != nil {
 		t.Fatal(err)
 	}
+	defer os.RemoveAll(tmpDir)
 
 	r, err := gohpygossh.GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
 	if err != nil {
@@ -189,27 +189,24 @@ func TestRunWithMultipass(t *testing.T) {
 		Memory:        "3g",
 		CloudInitFile: r.CloudInitPath,
 	})
-
 	if err != nil {
 		fmt.Println(err)
 		t.Fatal(err)
 	}
+	// Delete runs "multipass delete --purge", fully removing the VM when the test ends.
+	defer multipass.Delete(&multipass.DeleteRequest{Name: dyn_vm_name})
 
 	// Get the hostname of the multipass instance
-	// hostname, err := instance.GetHostname()
 	fmt.Println(instance.IP)
 
 	info, err := multipass.Info(&multipass.InfoRequest{Name: dyn_vm_name})
-	// hostname, err := multipass.Info(&multipass.InfoRequest{Name: "multipass-test"})
 	hostname := info.IP
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Execute the 'ls' command on the remote server
-	// FIXME: 'cloud-user' is a magic string, we should pass into
-	// the 'GenerateKeyPaiirAndCloudInit()' function
-	output, err := gohpygossh.Run(hostname, "cloud-user", r.SshKeyPath, "echo 'Connection success'")
+	output, err := gohpygossh.Run(hostname, r.CloudUser, r.SshKeyPath, "echo 'Connection success'")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -218,9 +215,5 @@ func TestRunWithMultipass(t *testing.T) {
 	if !strings.Contains(output, "Connection success") {
 		t.Error("Expected 'Connection success' in output but found:", output)
 	}
-
-	// TODO: What exactly does this do?
-	defer multipass.Delete(&multipass.DeleteRequest{Name: dyn_vm_name})
-	defer os.RemoveAll(tmpDir)
 
 }
