@@ -14,8 +14,59 @@ defaults:
     shell: bash
 
 jobs:
-  call-lint:
-    uses: ./.github/workflows/lint-on-macos.yaml
+  lint:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [macos-latest, ubuntu-22.04]
+        go-version: [1.24.x]
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: ${{ matrix.go-version }}
+          cache-dependency-path: go.sum
+      - name: Install dependencies
+        run: go get .
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install pre-commit dependencies
+        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+      - uses: pre-commit/action@v3.0.1
+
+  build-linux:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Setup project files
+        run: |
+          rm -rf poetry.lock pyproject.toml
+          cat > pyproject.toml << 'EOF'
+          [build-system]
+          requires = ["setuptools>=40.8.0", "pybindgen"]
+          build-backend = "setuptools.build_meta"
+          EOF
+          cp setup_ci.py setup.py
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.4.1
+        env:
+          CIBW_BUILD: "cp313-*_x86_64 cp314-*_x86_64"
+          CIBW_SKIP: "*-musllinux_x86_64"
+          CIBW_ARCHS: "native"
+          CIBW_ENVIRONMENT: >
+            PATH=$PATH:/usr/local/go/bin
+          CIBW_BEFORE_ALL_LINUX: |
+            curl -o go.tar.gz https://dl.google.com/go/go1.24.3.linux-amd64.tar.gz
+            tar -C /usr/local -xzf go.tar.gz
+            go install github.com/go-python/gopy@v0.4.10
+            go install golang.org/x/tools/cmd/goimports@latest
 
   build:
     runs-on: macos-latest
