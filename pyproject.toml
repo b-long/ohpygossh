@@ -9,7 +9,7 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = ">3.11,<3.12"
 pybindgen = "^0.22.1"
-wheel = "^0.42.0"
+wheel = ">=0.42,<0.47"
 
 
 [tool.poetry.group.dev.dependencies]
