@@ -92,7 +92,7 @@ jobs:
       #       /usr/local/bin/python_for_build validate_ohpygossh.py
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-macos${{ matrix.os_version }}-py3${{ matrix.python3_version }}-${{ matrix.arch_cibw_go[0] }}
           path: ./wheelhouse/*.whl
@@ -150,14 +150,14 @@ jobs:
       #       python3 validate_ohpygossh.py
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-linux-amd64
           path: ./wheelhouse/*.whl
 
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-linux-arm
           path: /tmp/output/*.whl
@@ -198,7 +198,7 @@ jobs:
             go install golang.org/x/tools/cmd/goimports@latest
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-linux-arm
           path: ./wheelhouse/*.whl
@@ -238,7 +238,7 @@ jobs:
 #             GOARCH=amd64
 
 #       - name: Upload artifacts
-#         uses: actions/upload-artifact@v4
+#         uses: actions/upload-artifact@v7
 #         with:
 #           name: wheels-windows-amd64
 #           path: ./wheelhouse/*.whl
