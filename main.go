@@ -137,6 +137,32 @@ func GenerateShortUUID(length int) (string, error) {
 	return encodedString[:length], nil
 }
 
+// GenerateRandomHostname returns a valid hostname of the form "ohpyvm-XXXX"
+// where XXXX is four lowercase alphanumeric characters derived from a random
+// UUID. Designed for multipass VM naming (which forbids consecutive hyphens,
+// leading/trailing hyphens, and non-alphanumeric characters), but may serve
+// other use cases that require a short, safe, random hostname.
+func GenerateRandomHostname() (string, error) {
+	raw, err := GenerateShortUUID(8)
+	if err != nil {
+		return "", err
+	}
+	var b strings.Builder
+	for _, c := range strings.ToLower(raw) {
+		if (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') {
+			b.WriteRune(c)
+			if b.Len() == 4 {
+				break
+			}
+		}
+	}
+	suffix := b.String()
+	for len(suffix) < 4 {
+		suffix += "a"
+	}
+	return "ohpyvm-" + suffix, nil
+}
+
 func PublicKeyFile(file string) ssh.AuthMethod {
 	keyBytes, err := os.ReadFile(file)
 	if err != nil {
