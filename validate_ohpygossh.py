@@ -148,12 +148,6 @@ def test_say_hello():
 def test_with_cloud_init():
     try:
         print("Python validation starting, for 'test_with_cloud_init'")
-
-        from ohpygossh.gohpygossh import GenerateShortUUID
-
-        # Prints str like 'my-generated-id-MJKB'
-        print(f"my-generated-id-{GenerateShortUUID(length=4)}")
-
         from ohpygossh.gohpygossh import GenerateKeyPairAndCloudInit, KeysAndInit
 
         this_file_dir = Path(__file__).parent
@@ -234,13 +228,13 @@ def test_with_multipass():
         from ohpygossh.gohpygossh import (
             Download,
             GenerateKeyPairAndCloudInit,
+            GenerateRandomHostname,
             GenerateShortUUID,
             Run,
             Upload,
         )
 
-        short_id = GenerateShortUUID(4)
-        vm_name = f"ohpytest-{short_id}".lower().replace("_", "-")
+        vm_name = GenerateRandomHostname()
         mp = _multipass_cmd()
 
         # multipass snap AppArmor profile allows @{HOME}/** but not /tmp/**;

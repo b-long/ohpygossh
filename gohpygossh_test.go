@@ -22,7 +22,6 @@ func TestHello(t *testing.T) {
 func TestGenerateKeyPairAndCloudInit(t *testing.T) {
 	// Create a temporary directory for multipass operations
 	tmpDir, err := os.MkdirTemp("", "g-opg-test")
-
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,6 +104,35 @@ func TestGenerateShortUUID(t *testing.T) {
 	}
 }
 
+func TestGenerateRandomHostname(t *testing.T) {
+	const prefix = "ohpyvm-"
+
+	for i := 0; i < 20; i++ {
+		name, err := gohpygossh.GenerateRandomHostname()
+		if err != nil {
+			t.Fatalf("GenerateRandomHostname() failed: %v", err)
+		}
+		if !strings.HasPrefix(name, prefix) {
+			t.Errorf("VM name %q missing expected prefix %q", name, prefix)
+		}
+		suffix := strings.TrimPrefix(name, prefix)
+		if len(suffix) != 4 {
+			t.Errorf("VM name suffix %q is not exactly 4 chars", suffix)
+		}
+		for _, c := range suffix {
+			if !((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) {
+				t.Errorf("suffix %q contains non-alphanumeric character %q", suffix, c)
+			}
+		}
+	}
+
+	name1, _ := gohpygossh.GenerateRandomHostname()
+	name2, _ := gohpygossh.GenerateRandomHostname()
+	if name1 == name2 {
+		t.Errorf("expected unique VM names, both were %q", name1)
+	}
+}
+
 func TestPublicKeyFile(t *testing.T) {
 	tmpDir, err := os.MkdirTemp("", "pubkeyfile-test")
 	if err != nil {
@@ -178,8 +206,10 @@ func TestRunWithMultipass(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	shortID, _ := gohpygossh.GenerateShortUUID(4)
-	dynVMName := fmt.Sprintf("testvm%s", strings.ToLower(strings.ReplaceAll(shortID, "_", "-")))
+	dynVMName, err := gohpygossh.GenerateRandomHostname()
+	if err != nil {
+		t.Fatal(err)
+	}
 
 	instance, err := multipass.LaunchV2(&multipass.LaunchReqV2{
 		Image:         "lts",
@@ -215,5 +245,4 @@ func TestRunWithMultipass(t *testing.T) {
 	if !strings.Contains(output, "Connection success") {
 		t.Error("Expected 'Connection success' in output but found:", output)
 	}
-
 }
