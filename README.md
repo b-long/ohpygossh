@@ -20,6 +20,37 @@ It is paramount that we all play nicely.  To that end, please do your very best
 not to create churn or spur conversations that may upset other developers,
 and/or cause debate without offering solutions.
 
+## Usage
+
+Install the library:
+
+```bash
+pip install ohpygossh
+```
+
+Import and use the library to perform SSH operations:
+
+```python
+from ohpygossh.gohpygossh import Run, Upload, Download
+
+# SSH connection parameters
+#
+# The remote hostname or IP address
+ssh_server = "example.com"
+# Your user account on the remote machine
+ssh_user = "ubuntu"
+# A PEM encoded private key file (like ~/.ssh/id_ed25519 )
+private_key = "/path/to/private/key"
+
+# Execute a command on a remote host
+output, err = Run(ssh_server, ssh_user, private_key, "ls -la")
+
+# Upload a file to the remote host
+err = Upload(ssh_server, ssh_user, private_key, "/local/file.txt", "/remote/file.txt")
+
+# Download a file from the remote host
+err = Download(ssh_server, ssh_user, private_key, "/remote/file.txt", "/local/file.txt")
+```
 
 ## Development
 
@@ -38,7 +69,7 @@ located at `dist/ohpygossh-<version>-py3-none-any.whl`
 
 This project has to think about naming in two different contexts:
 
-* The Python library, imported by end-users: `ohpygossh`.
+* The Python library, installed by end-users: `ohpygossh`.
 * The Golang package, also used in the `pyproject.toml`: `gohpygossh`.
 
 Briefly:
