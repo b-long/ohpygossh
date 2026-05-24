@@ -4,15 +4,10 @@ A project to create a new cross-platform SSH wheel for Python.
 
 <img width="617" alt="image" src="docs/assets/banner.png">
 
-
 ## Goals
 
 1. An easy to install, multi-platform SSH wheel
-1. Personal learning about Go
 1. To explore [`gopy`](https://github.com/go-python/gopy)
-1. To explore Python packaging & compiling.  What can we
-do with available open source tooling?
-1. To explore performance characteristics
 
 ## Code of Conduct
 
@@ -25,7 +20,12 @@ It is paramount that we all play nicely.  To that end, please do your very best
 not to create churn or spur conversations that may upset other developers,
 and/or cause debate without offering solutions.
 
-## Build wheel
+
+## Development
+
+⚠️ This section needs to be rewritten ⚠️
+
+### Build wheel
 
 The following steps should produce a wheel,
 located at `dist/ohpygossh-<version>-py3-none-any.whl`
@@ -34,33 +34,28 @@ located at `dist/ohpygossh-<version>-py3-none-any.whl`
 ./make_and_validate_script.sh
 ```
 
-## Naming
+### Naming
 
-This project has to think about components in two different contexts.
+This project has to think about naming in two different contexts:
 
-To distinguish the two, use the following names:
+* The Python library, imported by end-users: `ohpygossh`.
+* The Golang package, also used in the `pyproject.toml`: `gohpygossh`.
 
-* The Python module is imported as `ohpygossh`.
-* The Golang package is used as `gohpygossh`.
+Briefly:
 
-NOTE: Currently, the `pyproject.toml` in this project is named for the
-Golang package.  This may need to change as the project matures.
+```python
+# Install the library:
+#   pip install ohpygossh
 
-As a Python user:
-
-* Install the library, with `pip install ohpygossh`
-* Import functions and data structures, with `from ohpygossh.gohpygossh import ...`
-
+# Import functions and data structures
+from ohpygossh.gohpygossh import ...
+```
 
 ## Reference
 
 Based on:
+* [`gopy`]
 * https://github.com/b-long/cookiecutter-gopy
-* https://last9.io/blog/using-golang-package-in-python-using-gopy/
-
-Learn Go:
-* https://learnxinyminutes.com/docs/go/
-* https://gist.github.com/prologic/5f6afe9c1b98016ca278f4d507e65510
 
 [`gopy`]: https://github.com/go-python/gopy
 [`paramiko`]: https://pypi.org/project/paramiko/
