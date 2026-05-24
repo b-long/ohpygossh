@@ -156,11 +156,10 @@ func GenerateRandomHostname() (string, error) {
 			}
 		}
 	}
-	suffix := b.String()
-	for len(suffix) < 4 {
-		suffix += "a"
+	for b.Len() < 4 {
+		b.WriteRune('a')
 	}
-	return "ohpyvm-" + suffix, nil
+	return "ohpyvm-" + b.String(), nil
 }
 
 func PublicKeyFile(file string) ssh.AuthMethod {
