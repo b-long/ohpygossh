@@ -7,7 +7,11 @@
       "release-type": "simple",
       "package-name": "ohpygossh",
       "extra-files": [
-        "pyproject.toml"
+        {
+          "type": "toml",
+          "path": "pyproject.toml",
+          "jsonpath": "$.tool.poetry.version"
+        }
       ]
     }
   },
