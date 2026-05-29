@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.3.2](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.3.1...ohpygossh-v0.3.2) (2026-05-29)
+
+
+### Bug Fixes
+
+* create new func for VM naming ([#51](https://github.com/b-long/ohpygossh/issues/51)) ([a1e8b86](https://github.com/b-long/ohpygossh/commit/a1e8b86c5923f4ea3ef8e0b7471bd76220437dc8))
+* sync pyproject.toml to release-please manifest ([#50](https://github.com/b-long/ohpygossh/issues/50)) ([b7d6164](https://github.com/b-long/ohpygossh/commit/b7d61645f132338fb15ed3c616f59eae935e45e2))
+* use explicit toml type in extra-files for pyproject.toml ([#52](https://github.com/b-long/ohpygossh/issues/52)) ([42b7084](https://github.com/b-long/ohpygossh/commit/42b70842a88a0d56627f44d5df720034b1813fb0))
+* various cibuildwheel fixes ([#48](https://github.com/b-long/ohpygossh/issues/48)) ([338ee68](https://github.com/b-long/ohpygossh/commit/338ee68871eb6d834653c45ee2f367137be7d68b))
+
 ## [0.3.1](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.3.0...ohpygossh-v0.3.1) (2026-05-22)
 
 
