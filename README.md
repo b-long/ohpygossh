@@ -4,15 +4,10 @@ A project to create a new cross-platform SSH wheel for Python.
 
 <img width="617" alt="image" src="docs/assets/banner.png">
 
-
 ## Goals
 
 1. An easy to install, multi-platform SSH wheel
-1. Personal learning about Go
 1. To explore [`gopy`](https://github.com/go-python/gopy)
-1. To explore Python packaging & compiling.  What can we
-do with available open source tooling?
-1. To explore performance characteristics
 
 ## Code of Conduct
 
@@ -25,7 +20,43 @@ It is paramount that we all play nicely.  To that end, please do your very best
 not to create churn or spur conversations that may upset other developers,
 and/or cause debate without offering solutions.
 
-## Build wheel
+## Usage
+
+Install the library:
+
+```bash
+pip install ohpygossh
+```
+
+Import and use the library to perform SSH operations:
+
+```python
+from ohpygossh.gohpygossh import Run, Upload, Download
+
+# SSH connection parameters
+#
+# The remote hostname or IP address
+ssh_server = "example.com"
+# Your user account on the remote machine
+ssh_user = "ubuntu"
+# A PEM encoded private key file (like ~/.ssh/id_ed25519 )
+private_key = "/path/to/private/key"
+
+# Execute a command on a remote host
+output = Run(ssh_server, ssh_user, private_key, "ls -la")
+
+# Upload a file to the remote host
+Upload(ssh_server, ssh_user, private_key, "/local/file.txt", "/remote/file.txt")
+
+# Download a file from the remote host
+Download(ssh_server, ssh_user, private_key, "/remote/file.txt", "/local/file.txt")
+```
+
+## Development
+
+⚠️ This section needs to be rewritten ⚠️
+
+### Build wheel
 
 The following steps should produce a wheel,
 located at `dist/ohpygossh-<version>-py3-none-any.whl`
@@ -34,33 +65,28 @@ located at `dist/ohpygossh-<version>-py3-none-any.whl`
 ./make_and_validate_script.sh
 ```
 
-## Naming
+### Naming
 
-This project has to think about components in two different contexts.
+This project has to think about naming in two different contexts:
 
-To distinguish the two, use the following names:
+* The Python library, installed by end-users: `ohpygossh`.
+* The Golang package, also used in the `pyproject.toml`: `gohpygossh`.
 
-* The Python module is imported as `ohpygossh`.
-* The Golang package is used as `gohpygossh`.
+Briefly:
 
-NOTE: Currently, the `pyproject.toml` in this project is named for the
-Golang package.  This may need to change as the project matures.
+```python
+# Install the library:
+#   pip install ohpygossh
 
-As a Python user:
-
-* Install the library, with `pip install ohpygossh`
-* Import functions and data structures, with `from ohpygossh.gohpygossh import ...`
-
+# Import functions and data structures
+from ohpygossh.gohpygossh import ...
+```
 
 ## Reference
 
 Based on:
+* [`gopy`]
 * https://github.com/b-long/cookiecutter-gopy
-* https://last9.io/blog/using-golang-package-in-python-using-gopy/
-
-Learn Go:
-* https://learnxinyminutes.com/docs/go/
-* https://gist.github.com/prologic/5f6afe9c1b98016ca278f4d507e65510
 
 [`gopy`]: https://github.com/go-python/gopy
 [`paramiko`]: https://pypi.org/project/paramiko/
