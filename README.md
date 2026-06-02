@@ -43,13 +43,13 @@ ssh_user = "ubuntu"
 private_key = "/path/to/private/key"
 
 # Execute a command on a remote host
-output, err = Run(ssh_server, ssh_user, private_key, "ls -la")
+output = Run(ssh_server, ssh_user, private_key, "ls -la")
 
 # Upload a file to the remote host
-err = Upload(ssh_server, ssh_user, private_key, "/local/file.txt", "/remote/file.txt")
+Upload(ssh_server, ssh_user, private_key, "/local/file.txt", "/remote/file.txt")
 
 # Download a file from the remote host
-err = Download(ssh_server, ssh_user, private_key, "/remote/file.txt", "/local/file.txt")
+Download(ssh_server, ssh_user, private_key, "/remote/file.txt", "/local/file.txt")
 ```
 
 ## Development
