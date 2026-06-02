@@ -1,5 +1,5 @@
 ---
-name: E2E -- Multipass
+name: E2E -- LXC
 
 on:
   push:
@@ -10,8 +10,8 @@ on:
       - main
 
 jobs:
-  e2e-linux:
-    name: E2E Ubuntu (multipass)
+  e2e-lxc:
+    name: E2E Ubuntu (lxc)
     runs-on: ubuntu-22.04
 
     steps:
@@ -42,17 +42,15 @@ jobs:
             go install golang.org/x/tools/cmd/goimports@latest
 
       - name: Setup Python 3.11
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v4
         with:
           python-version: '3.11'
 
-      - name: Install multipass
-        run: |
-          sudo snap install multipass
-          sudo multipass version
+      - name: Initialize LXD
+        run: sudo lxd init --auto
 
       - name: Install wheel
         run: pip install wheelhouse/*.whl
 
       - name: Run e2e tests
-        run: python3 validate_ohpygossh.py --only=multipass
+        run: python3 validate_ohpygossh.py --only=lxc
