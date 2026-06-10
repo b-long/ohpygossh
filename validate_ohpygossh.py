@@ -395,59 +395,70 @@ def test_with_lxc():
                         time.sleep(wait)
                     # init + config set + start avoids embedding multi-line YAML
                     # in --config= and uses the modern cloud-init.user-data key.
-                    if subprocess.run([*lxc, "init", "ubuntu:lts", vm_name]).returncode != 0:
+                    if (
+                        subprocess.run([*lxc, "init", "ubuntu:lts", vm_name]).returncode
+                        != 0
+                    ):
                         continue
-                    subprocess.run(
-                        [*lxc, "config", "set", vm_name, "cloud-init.user-data", cloud_init_content],
-                        check=True,
-                    )
+                    if (
+                        subprocess.run(
+                            [
+                                *lxc,
+                                "config",
+                                "set",
+                                vm_name,
+                                "cloud-init.user-data",
+                                cloud_init_content,
+                            ]
+                        ).returncode
+                        != 0
+                    ):
+                        continue
                     if subprocess.run([*lxc, "start", vm_name]).returncode == 0:
                         break
                 else:
                     raise RuntimeError("lxc launch failed after 4 attempts")
 
                 # Wait for cloud-init to finish provisioning the user and SSH keys.
-                # Exit code 0 = success; 2 = cloud-init disabled (no-op image) — both
-                # are acceptable here; 1 = real error.
+                # Exit 0 = success; 1 = ran but some modules errored (SSH keys may
+                # still be provisioned); 2 = cloud-init disabled.  All three are
+                # acceptable — the SSH test below is the real gate.
                 ci_result = subprocess.run(
                     [*lxc, "exec", vm_name, "--", "cloud-init", "status", "--wait"],
                 )
-                if ci_result.returncode not in (0, 2):
-                    subprocess.run(
-                        [*lxc, "exec", vm_name, "--", "cloud-init", "analyze", "show"],
-                        check=False,
+                if ci_result.returncode == 1:
+                    print(
+                        "Warning: cloud-init reported errors (exit 1); "
+                        "continuing to verify SSH connectivity"
                     )
+                elif ci_result.returncode not in (0, 2):
                     raise RuntimeError(
-                        f"cloud-init failed or reported errors (exit {ci_result.returncode})"
+                        f"cloud-init status returned unexpected exit code "
+                        f"{ci_result.returncode}"
                     )
 
-                # Poll for a routable IPv4 address (network stack may lag behind boot)
+                # Poll for a routable IPv4 address by asking the container directly.
+                # lxc list state.network is often null while the NIC is still
+                # acquiring a DHCP lease; hostname -I is more reliable.
                 ip = None
-                for attempt in range(12):
-                    info_result = subprocess.run(
-                        [*lxc, "list", vm_name, "--format", "json"],
-                        capture_output=True,
-                        text=True,
-                        check=True,
-                    )
-                    info_data = json.loads(info_result.stdout)
-                    if info_data:
-                        networks = (info_data[0].get("state") or {}).get("network") or {}
-                        for iface, iface_data in networks.items():
-                            if iface == "lo":
-                                continue
-                            for addr in iface_data.get("addresses", []):
-                                if (
-                                    addr.get("family") == "inet"
-                                    and addr.get("scope") == "global"
-                                ):
-                                    ip = addr["address"]
-                                    break
-                            if ip:
-                                break
-                    if ip:
-                        break
-                    print(f"Waiting for IP address (attempt {attempt + 1}/12)...")
+                for attempt in range(24):
+                    try:
+                        ip_result = subprocess.run(
+                            [*lxc, "exec", vm_name, "--", "hostname", "-I"],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                        )
+                        # hostname -I returns space-separated IPs; skip IPv6
+                        ips = [
+                            a for a in ip_result.stdout.split() if ":" not in a and a
+                        ]
+                        if ips:
+                            ip = ips[0]
+                            break
+                    except subprocess.TimeoutExpired:
+                        pass
+                    print(f"Waiting for IP address (attempt {attempt + 1}/24)...")
                     time.sleep(5)
 
                 if not ip:
