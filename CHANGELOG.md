@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.4.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.3.2...ohpygossh-v0.4.0) (2026-06-10)
+
+
+### Features
+
+* improve README for end-users ([#54](https://github.com/b-long/ohpygossh/issues/54)) ([120e815](https://github.com/b-long/ohpygossh/commit/120e815c9af6e42509ede0a85716f4a8d2f9abec))
+
 ## [0.3.2](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.3.1...ohpygossh-v0.3.2) (2026-05-29)
 
 
