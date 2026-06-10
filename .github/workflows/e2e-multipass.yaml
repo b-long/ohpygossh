@@ -28,7 +28,7 @@ jobs:
           cp setup_ci.py setup.py
 
       - name: Build wheel
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.0.0
         env:
           CIBW_BUILD: "cp311-*_x86_64"
           CIBW_SKIP: "*-musllinux_x86_64"
