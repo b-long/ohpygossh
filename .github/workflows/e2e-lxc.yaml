@@ -47,7 +47,9 @@ jobs:
           python-version: '3.11'
 
       - name: Initialize LXD
-        run: sudo lxd init --auto
+        run: |
+          sudo lxd init --auto
+          sudo iptables -P FORWARD ACCEPT
 
       - name: Install wheel
         run: pip install wheelhouse/*.whl

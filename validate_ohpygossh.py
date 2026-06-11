@@ -437,26 +437,33 @@ def test_with_lxc():
                         f"{ci_result.returncode}"
                     )
 
-                # Poll for a routable IPv4 address by asking the container directly.
-                # lxc list state.network is often null while the NIC is still
-                # acquiring a DHCP lease; hostname -I is more reliable.
+                # Poll for a routable IPv4 address via lxc list JSON.  This
+                # queries LXD's own state without exec'ing into the container,
+                # so it works even when the in-container shell is not yet ready.
                 ip = None
                 for attempt in range(24):
                     try:
-                        ip_result = subprocess.run(
-                            [*lxc, "exec", vm_name, "--", "hostname", "-I"],
+                        list_result = subprocess.run(
+                            [*lxc, "list", vm_name, "--format", "json"],
                             capture_output=True,
                             text=True,
                             timeout=10,
                         )
-                        # hostname -I returns space-separated IPs; skip IPv6
-                        ips = [
-                            a for a in ip_result.stdout.split() if ":" not in a and a
-                        ]
-                        if ips:
-                            ip = ips[0]
+                        containers = json.loads(list_result.stdout or "[]")
+                        for container in containers:
+                            network = (
+                                (container.get("state") or {}).get("network") or {}
+                            )
+                            for _iface, info in network.items():
+                                for addr in info.get("addresses", []):
+                                    if (
+                                        addr["family"] == "inet"
+                                        and addr["scope"] == "global"
+                                    ):
+                                        ip = addr["address"]
+                        if ip:
                             break
-                    except subprocess.TimeoutExpired:
+                    except (subprocess.TimeoutExpired, json.JSONDecodeError):
                         pass
                     print(f"Waiting for IP address (attempt {attempt + 1}/24)...")
                     time.sleep(5)
