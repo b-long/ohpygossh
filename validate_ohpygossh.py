@@ -217,6 +217,20 @@ def _multipass_cmd() -> list:
     return ["multipass"]
 
 
+def _lxc_cmd() -> list:
+    """Prefix lxc with sudo if the current user is not in the lxd group."""
+    if sys.platform == "linux" and os.geteuid() != 0 and which("sudo"):
+        import grp
+
+        try:
+            lxd_gid = grp.getgrnam("lxd").gr_gid
+            if lxd_gid not in os.getgroups():
+                return ["sudo", "lxc"]
+        except KeyError:
+            return ["sudo", "lxc"]
+    return ["lxc"]
+
+
 def test_with_multipass():
     if not which("multipass"):
         print("multipass not installed, skipping test_with_multipass")
@@ -337,12 +351,200 @@ def test_with_multipass():
         ) from e
 
 
+def test_with_lxc():
+    if not which("lxc"):
+        print("lxc not installed, skipping test_with_lxc")
+        return
+
+    try:
+        print("Python validation starting, for 'test_with_lxc'")
+
+        from ohpygossh.gohpygossh import (
+            Download,
+            GenerateKeyPairAndCloudInit,
+            GenerateRandomHostname,
+            GenerateShortUUID,
+            Run,
+            Upload,
+        )
+
+        vm_name = GenerateRandomHostname()
+        lxc = _lxc_cmd()
+
+        with tempfile.TemporaryDirectory(dir=Path.home()) as tmpDir:
+            kai = GenerateKeyPairAndCloudInit(tmpDir, "cloud-user")
+            cloud_init_content = Path(kai.CloudInitPath).read_text()
+
+            # LXD/cloud-init requires the #cloud-config header to recognise the
+            # payload as YAML; the Go generator omits it.
+            if not cloud_init_content.lstrip().startswith("#cloud-config"):
+                cloud_init_content = "#cloud-config\n" + cloud_init_content.lstrip()
+
+            print(f"Launching LXC container: {vm_name}")
+            try:
+                for attempt, wait in enumerate([0, 10, 30, 90]):
+                    if wait:
+                        print(
+                            f"Launch attempt {attempt} failed, retrying in {wait}s..."
+                        )
+                        subprocess.run(
+                            [*lxc, "delete", "--force", vm_name],
+                            stdout=subprocess.DEVNULL,
+                            stderr=subprocess.DEVNULL,
+                        )
+                        time.sleep(wait)
+                    # init + config set + start avoids embedding multi-line YAML
+                    # in --config= and uses the modern cloud-init.user-data key.
+                    if (
+                        subprocess.run([*lxc, "init", "ubuntu:lts", vm_name]).returncode
+                        != 0
+                    ):
+                        continue
+                    if (
+                        subprocess.run(
+                            [
+                                *lxc,
+                                "config",
+                                "set",
+                                vm_name,
+                                "cloud-init.user-data",
+                                cloud_init_content,
+                            ]
+                        ).returncode
+                        != 0
+                    ):
+                        continue
+                    if subprocess.run([*lxc, "start", vm_name]).returncode == 0:
+                        break
+                else:
+                    raise RuntimeError("lxc launch failed after 4 attempts")
+
+                # Wait for cloud-init to finish provisioning the user and SSH keys.
+                # Exit 0 = success; 1 = ran but some modules errored (SSH keys may
+                # still be provisioned); 2 = cloud-init disabled.  All three are
+                # acceptable — the SSH test below is the real gate.
+                ci_result = subprocess.run(
+                    [*lxc, "exec", vm_name, "--", "cloud-init", "status", "--wait"],
+                )
+                if ci_result.returncode == 1:
+                    print(
+                        "Warning: cloud-init reported errors (exit 1); "
+                        "continuing to verify SSH connectivity"
+                    )
+                elif ci_result.returncode not in (0, 2):
+                    raise RuntimeError(
+                        f"cloud-init status returned unexpected exit code "
+                        f"{ci_result.returncode}"
+                    )
+
+                # Poll for a routable IPv4 address via lxc list JSON.  This
+                # queries LXD's own state without exec'ing into the container,
+                # so it works even when the in-container shell is not yet ready.
+                ip = None
+                for attempt in range(24):
+                    try:
+                        list_result = subprocess.run(
+                            [*lxc, "list", vm_name, "--format", "json"],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                        )
+                        containers = json.loads(list_result.stdout or "[]")
+                        for container in containers:
+                            network = (container.get("state") or {}).get(
+                                "network"
+                            ) or {}
+                            for _iface, info in network.items():
+                                for addr in info.get("addresses", []):
+                                    if (
+                                        addr["family"] == "inet"
+                                        and addr["scope"] == "global"
+                                    ):
+                                        ip = addr["address"]
+                        if ip:
+                            break
+                    except (subprocess.TimeoutExpired, json.JSONDecodeError):
+                        pass
+                    print(f"Waiting for IP address (attempt {attempt + 1}/24)...")
+                    time.sleep(5)
+
+                if not ip:
+                    raise RuntimeError(f"No IPv4 address found for container {vm_name}")
+                print(f"Container IP: {ip}")
+
+                output = Run(
+                    ip, kai.CloudUser, kai.SshKeyPath, "echo 'Connection success'"
+                )
+
+                if "Connection success" not in output:
+                    raise RuntimeError(f"Unexpected SSH output: {output!r}")
+
+                print(f"Run e2e test passed. Output: {output!r}")
+
+                # SFTP round-trip: upload a file, verify it landed, download it back.
+                unique_marker = GenerateShortUUID(8)
+                upload_content = f"ohpygossh-sftp-test:{unique_marker}\n"
+                local_upload = os.path.join(tmpDir, "upload.txt")
+                remote_path = f"/home/{kai.CloudUser}/uploaded.txt"
+                local_download = os.path.join(tmpDir, "download.txt")
+
+                Path(local_upload).write_text(upload_content)
+
+                Upload(ip, kai.CloudUser, kai.SshKeyPath, local_upload, remote_path)
+                print(f"Upload complete: {local_upload} -> {remote_path}")
+
+                cat_output = Run(
+                    ip, kai.CloudUser, kai.SshKeyPath, f"cat {remote_path}"
+                )
+                if cat_output.strip() != upload_content.strip():
+                    raise RuntimeError(
+                        f"Remote file content mismatch after upload. Got: {cat_output!r}"
+                    )
+                print("Remote file content verified via Run/cat.")
+
+                Download(ip, kai.CloudUser, kai.SshKeyPath, remote_path, local_download)
+                print(f"Download complete: {remote_path} -> {local_download}")
+
+                downloaded_content = Path(local_download).read_text()
+                if downloaded_content != upload_content:
+                    raise RuntimeError(
+                        f"Downloaded content does not match original. Got: {downloaded_content!r}"
+                    )
+
+                print(f"SFTP round-trip e2e test passed. Marker: {unique_marker!r}")
+
+            finally:
+                print(f"Deleting LXC container: {vm_name}")
+                subprocess.run([*lxc, "delete", "--force", vm_name], check=False)
+
+    except Exception as e:
+        raise RuntimeError(
+            "An unexpected error occurred testing ohpygossh with lxc"
+        ) from e
+
+
 if __name__ == "__main__":
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--only",
+        choices=["multipass", "lxc"],
+        help="Run only the named test suite (default: run all)",
+    )
+    args = parser.parse_args()
+    only = args.only
+
     test_say_hello()
 
-    test_with_multipass()
+    if only is None or only == "multipass":
+        test_with_multipass()
 
-    if which("vagrant"):
-        test_with_keys_only()
-    else:
-        print("vagrant not installed, skipping test_with_keys_only")
+    if only is None or only == "lxc":
+        test_with_lxc()
+
+    if only is None:
+        if which("vagrant"):
+            test_with_keys_only()
+        else:
+            print("vagrant not installed, skipping test_with_keys_only")
