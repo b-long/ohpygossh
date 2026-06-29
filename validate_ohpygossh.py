@@ -224,7 +224,10 @@ def _lxc_cmd() -> list:
 
         try:
             lxd_gid = grp.getgrnam("lxd").gr_gid
-            if lxd_gid not in os.getgroups():
+            if lxd_gid not in os.getgroups() and lxd_gid not in (
+                os.getgid(),
+                os.getegid(),
+            ):
                 return ["sudo", "lxc"]
         except KeyError:
             return ["sudo", "lxc"]
@@ -419,6 +422,49 @@ def test_with_lxc():
                 else:
                     raise RuntimeError("lxc launch failed after 4 attempts")
 
+                # Poll for a routable IPv4 address via lxc list JSON first. This
+                # queries LXD's own state without exec'ing into the container, so
+                # it works even when the in-container shell is not yet ready and
+                # is more robust than running `lxc exec` immediately after start.
+                ip = None
+                for attempt in range(24):
+                    try:
+                        list_result = subprocess.run(
+                            [*lxc, "list", vm_name, "--format", "json"],
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=True,
+                        )
+                        containers = json.loads(list_result.stdout or "[]")
+                        for container in containers:
+                            if container.get("name") != vm_name:
+                                continue
+                            network = (container.get("state") or {}).get(
+                                "network"
+                            ) or {}
+                            for _iface, info in network.items():
+                                for addr in (info or {}).get("addresses", []):
+                                    if (
+                                        addr.get("family") == "inet"
+                                        and addr.get("scope") == "global"
+                                    ):
+                                        ip = addr.get("address")
+                        if ip:
+                            break
+                    except (
+                        subprocess.TimeoutExpired,
+                        subprocess.CalledProcessError,
+                        json.JSONDecodeError,
+                    ):
+                        pass
+                    print(f"Waiting for IP address (attempt {attempt + 1}/24)...")
+                    time.sleep(5)
+
+                if not ip:
+                    raise RuntimeError(f"No IPv4 address found for container {vm_name}")
+                print(f"Container IP: {ip}")
+
                 # Wait for cloud-init to finish provisioning the user and SSH keys.
                 # Exit 0 = success; 1 = ran but some modules errored (SSH keys may
                 # still be provisioned); 2 = cloud-init disabled.  All three are
@@ -436,41 +482,6 @@ def test_with_lxc():
                         f"cloud-init status returned unexpected exit code "
                         f"{ci_result.returncode}"
                     )
-
-                # Poll for a routable IPv4 address via lxc list JSON.  This
-                # queries LXD's own state without exec'ing into the container,
-                # so it works even when the in-container shell is not yet ready.
-                ip = None
-                for attempt in range(24):
-                    try:
-                        list_result = subprocess.run(
-                            [*lxc, "list", vm_name, "--format", "json"],
-                            capture_output=True,
-                            text=True,
-                            timeout=10,
-                        )
-                        containers = json.loads(list_result.stdout or "[]")
-                        for container in containers:
-                            network = (container.get("state") or {}).get(
-                                "network"
-                            ) or {}
-                            for _iface, info in network.items():
-                                for addr in info.get("addresses", []):
-                                    if (
-                                        addr["family"] == "inet"
-                                        and addr["scope"] == "global"
-                                    ):
-                                        ip = addr["address"]
-                        if ip:
-                            break
-                    except (subprocess.TimeoutExpired, json.JSONDecodeError):
-                        pass
-                    print(f"Waiting for IP address (attempt {attempt + 1}/24)...")
-                    time.sleep(5)
-
-                if not ip:
-                    raise RuntimeError(f"No IPv4 address found for container {vm_name}")
-                print(f"Container IP: {ip}")
 
                 output = Run(
                     ip, kai.CloudUser, kai.SshKeyPath, "echo 'Connection success'"
@@ -515,9 +526,16 @@ def test_with_lxc():
 
             finally:
                 print(f"Deleting LXC container: {vm_name}")
-                subprocess.run([*lxc, "delete", "--force", vm_name], check=False)
+                subprocess.run(
+                    [*lxc, "delete", "--force", vm_name],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                )
 
     except Exception as e:
+        if isinstance(e, RuntimeError):
+            raise
         raise RuntimeError(
             "An unexpected error occurred testing ohpygossh with lxc"
         ) from e
