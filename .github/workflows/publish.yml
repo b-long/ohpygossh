@@ -22,7 +22,7 @@ jobs:
           - [ "arm64", "arm64" ]
     runs-on: macos-${{ matrix.os_version }}
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: set up Go
         uses: actions/setup-go@v5
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup project files
         run: |
@@ -127,7 +127,7 @@ jobs:
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup project files
         run: |
@@ -173,7 +173,7 @@ jobs:
 #     runs-on: windows-2019
 
 #     steps:
-#       - uses: actions/checkout@v6
+#       - uses: actions/checkout@v7
 
 #       - name: Setup project files
 #         run: |
@@ -218,7 +218,7 @@ jobs:
     if: ${{ github.event_name == 'workflow_dispatch' }}
 
     steps:
-        - uses: actions/checkout@v6
+        - uses: actions/checkout@v7
         - uses: actions/download-artifact@v8
 
         - name: Collect all wheels
