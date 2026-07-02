@@ -218,20 +218,63 @@ def _multipass_cmd() -> list:
 
 
 def _lxc_cmd() -> list:
-    """Prefix lxc with sudo if the current user is not in the lxd group."""
-    if sys.platform == "linux" and os.geteuid() != 0 and which("sudo"):
-        import grp
+    """Prefix lxc with sudo if the LXD unix socket isn't accessible as-is.
 
-        try:
-            lxd_gid = grp.getgrnam("lxd").gr_gid
-            if lxd_gid not in os.getgroups() and lxd_gid not in (
-                os.getgid(),
-                os.getegid(),
-            ):
-                return ["sudo", "lxc"]
-        except KeyError:
+    The socket's group is configurable (e.g. canonical/setup-lxd defaults to
+    "adm", not "lxd"), so checking group membership by name is unreliable;
+    probing the actual command is the only check that matches reality.
+    """
+    if sys.platform == "linux" and os.geteuid() != 0 and which("sudo"):
+        if (
+            subprocess.run(
+                ["lxc", "list"], capture_output=True, timeout=10
+            ).returncode
+            != 0
+        ):
             return ["sudo", "lxc"]
     return ["lxc"]
+
+
+def _verify_ssh_and_sftp(ip: str, kai, tmp_dir: str) -> None:
+    """Run the SSH connectivity check and SFTP upload/download round-trip."""
+    from ohpygossh.gohpygossh import Download, GenerateShortUUID, Run, Upload
+
+    output = Run(ip, kai.CloudUser, kai.SshKeyPath, "echo 'Connection success'")
+
+    if "Connection success" not in output:
+        raise RuntimeError(f"Unexpected SSH output: {output!r}")
+
+    print(f"Run e2e test passed. Output: {output!r}")
+
+    # SFTP round-trip: upload a file, verify it landed, download it back.
+    unique_marker = GenerateShortUUID(8)
+    upload_content = f"ohpygossh-sftp-test:{unique_marker}\n"
+    local_upload = os.path.join(tmp_dir, "upload.txt")
+    remote_path = f"/home/{kai.CloudUser}/uploaded.txt"
+    local_download = os.path.join(tmp_dir, "download.txt")
+
+    Path(local_upload).write_text(upload_content)
+
+    Upload(ip, kai.CloudUser, kai.SshKeyPath, local_upload, remote_path)
+    print(f"Upload complete: {local_upload} -> {remote_path}")
+
+    cat_output = Run(ip, kai.CloudUser, kai.SshKeyPath, f"cat {remote_path}")
+    if cat_output.strip() != upload_content.strip():
+        raise RuntimeError(
+            f"Remote file content mismatch after upload. Got: {cat_output!r}"
+        )
+    print("Remote file content verified via Run/cat.")
+
+    Download(ip, kai.CloudUser, kai.SshKeyPath, remote_path, local_download)
+    print(f"Download complete: {remote_path} -> {local_download}")
+
+    downloaded_content = Path(local_download).read_text()
+    if downloaded_content != upload_content:
+        raise RuntimeError(
+            f"Downloaded content does not match original. Got: {downloaded_content!r}"
+        )
+
+    print(f"SFTP round-trip e2e test passed. Marker: {unique_marker!r}")
 
 
 def test_with_multipass():
@@ -243,12 +286,8 @@ def test_with_multipass():
         print("Python validation starting, for 'test_with_multipass'")
 
         from ohpygossh.gohpygossh import (
-            Download,
             GenerateKeyPairAndCloudInit,
             GenerateRandomHostname,
-            GenerateShortUUID,
-            Run,
-            Upload,
         )
 
         vm_name = GenerateRandomHostname()
@@ -303,52 +342,15 @@ def test_with_multipass():
                 ip = ipv4_addresses[0]
                 print(f"VM IP: {ip}")
 
-                output = Run(
-                    ip, kai.CloudUser, kai.SshKeyPath, "echo 'Connection success'"
-                )
-
-                if "Connection success" not in output:
-                    raise RuntimeError(f"Unexpected SSH output: {output!r}")
-
-                print(f"Run e2e test passed. Output: {output!r}")
-
-                # SFTP round-trip: upload a file, verify it landed, download it back.
-                unique_marker = GenerateShortUUID(8)
-                upload_content = f"ohpygossh-sftp-test:{unique_marker}\n"
-                local_upload = os.path.join(tmpDir, "upload.txt")
-                remote_path = f"/home/{kai.CloudUser}/uploaded.txt"
-                local_download = os.path.join(tmpDir, "download.txt")
-
-                Path(local_upload).write_text(upload_content)
-
-                Upload(ip, kai.CloudUser, kai.SshKeyPath, local_upload, remote_path)
-                print(f"Upload complete: {local_upload} -> {remote_path}")
-
-                cat_output = Run(
-                    ip, kai.CloudUser, kai.SshKeyPath, f"cat {remote_path}"
-                )
-                if cat_output.strip() != upload_content.strip():
-                    raise RuntimeError(
-                        f"Remote file content mismatch after upload. Got: {cat_output!r}"
-                    )
-                print("Remote file content verified via Run/cat.")
-
-                Download(ip, kai.CloudUser, kai.SshKeyPath, remote_path, local_download)
-                print(f"Download complete: {remote_path} -> {local_download}")
-
-                downloaded_content = Path(local_download).read_text()
-                if downloaded_content != upload_content:
-                    raise RuntimeError(
-                        f"Downloaded content does not match original. Got: {downloaded_content!r}"
-                    )
-
-                print(f"SFTP round-trip e2e test passed. Marker: {unique_marker!r}")
+                _verify_ssh_and_sftp(ip, kai, tmpDir)
 
             finally:
                 print(f"Deleting multipass VM: {vm_name}")
                 subprocess.run([*mp, "delete", "--purge", vm_name], check=False)
 
     except Exception as e:
+        if isinstance(e, RuntimeError):
+            raise
         raise RuntimeError(
             "An unexpected error occurred testing ohpygossh with multipass"
         ) from e
@@ -363,12 +365,8 @@ def test_with_lxc():
         print("Python validation starting, for 'test_with_lxc'")
 
         from ohpygossh.gohpygossh import (
-            Download,
             GenerateKeyPairAndCloudInit,
             GenerateRandomHostname,
-            GenerateShortUUID,
-            Run,
-            Upload,
         )
 
         vm_name = GenerateRandomHostname()
@@ -450,6 +448,9 @@ def test_with_lxc():
                                         and addr.get("scope") == "global"
                                     ):
                                         ip = addr.get("address")
+                                        break
+                                if ip:
+                                    break
                         if ip:
                             break
                     except (
@@ -483,46 +484,7 @@ def test_with_lxc():
                         f"{ci_result.returncode}"
                     )
 
-                output = Run(
-                    ip, kai.CloudUser, kai.SshKeyPath, "echo 'Connection success'"
-                )
-
-                if "Connection success" not in output:
-                    raise RuntimeError(f"Unexpected SSH output: {output!r}")
-
-                print(f"Run e2e test passed. Output: {output!r}")
-
-                # SFTP round-trip: upload a file, verify it landed, download it back.
-                unique_marker = GenerateShortUUID(8)
-                upload_content = f"ohpygossh-sftp-test:{unique_marker}\n"
-                local_upload = os.path.join(tmpDir, "upload.txt")
-                remote_path = f"/home/{kai.CloudUser}/uploaded.txt"
-                local_download = os.path.join(tmpDir, "download.txt")
-
-                Path(local_upload).write_text(upload_content)
-
-                Upload(ip, kai.CloudUser, kai.SshKeyPath, local_upload, remote_path)
-                print(f"Upload complete: {local_upload} -> {remote_path}")
-
-                cat_output = Run(
-                    ip, kai.CloudUser, kai.SshKeyPath, f"cat {remote_path}"
-                )
-                if cat_output.strip() != upload_content.strip():
-                    raise RuntimeError(
-                        f"Remote file content mismatch after upload. Got: {cat_output!r}"
-                    )
-                print("Remote file content verified via Run/cat.")
-
-                Download(ip, kai.CloudUser, kai.SshKeyPath, remote_path, local_download)
-                print(f"Download complete: {remote_path} -> {local_download}")
-
-                downloaded_content = Path(local_download).read_text()
-                if downloaded_content != upload_content:
-                    raise RuntimeError(
-                        f"Downloaded content does not match original. Got: {downloaded_content!r}"
-                    )
-
-                print(f"SFTP round-trip e2e test passed. Marker: {unique_marker!r}")
+                _verify_ssh_and_sftp(ip, kai, tmpDir)
 
             finally:
                 print(f"Deleting LXC container: {vm_name}")
