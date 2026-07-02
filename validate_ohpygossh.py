@@ -226,9 +226,7 @@ def _lxc_cmd() -> list:
     """
     if sys.platform == "linux" and os.geteuid() != 0 and which("sudo"):
         if (
-            subprocess.run(
-                ["lxc", "list"], capture_output=True, timeout=10
-            ).returncode
+            subprocess.run(["lxc", "list"], capture_output=True, timeout=10).returncode
             != 0
         ):
             return ["sudo", "lxc"]
