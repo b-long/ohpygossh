@@ -1,5 +1,5 @@
 ---
-name: E2E -- Multipass
+name: E2E -- LXC
 
 on:
   push:
@@ -10,12 +10,12 @@ on:
       - main
 
 jobs:
-  e2e-linux:
-    name: E2E Ubuntu (multipass)
+  e2e-lxc:
+    name: E2E Ubuntu (lxc)
     runs-on: ubuntu-22.04
 
     steps:
-      - uses: actions/checkout@v7
+      - uses: actions/checkout@v6
 
       - name: Setup project files
         run: |
@@ -46,23 +46,16 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install multipass
-        run: |
-          sudo snap install multipass
-          # multipassd can take a few seconds to finish initializing after
-          # snap install (e.g. writing its root cert); retry until ready.
-          for i in $(seq 1 10); do
-            if sudo multipass version; then
-              exit 0
-            fi
-            echo "multipassd not ready yet, retrying in 3s... ($i/10)"
-            sleep 3
-          done
-          echo "multipassd did not become ready in time" >&2
-          exit 1
+      - name: Setup LXD
+        uses: canonical/setup-lxd@v1
+        with:
+          channel: latest/edge
+
+      - name: Allow LXD bridge traffic
+        run: sudo iptables -P FORWARD ACCEPT
 
       - name: Install wheel
         run: pip install wheelhouse/*.whl
 
       - name: Run e2e tests
-        run: python3 validate_ohpygossh.py --only=multipass
+        run: python3 validate_ohpygossh.py --only=lxc
