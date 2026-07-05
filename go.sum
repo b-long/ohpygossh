@@ -1,7 +1,7 @@
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
-github.com/go-python/gopy v0.4.11-0.20260529002920-3cac6178ee44 h1:E6ewM9ABlY5JbBYQnH1h+s4/owQO+J74dSC2CbbFsSg=
-github.com/go-python/gopy v0.4.11-0.20260529002920-3cac6178ee44/go.mod h1:t4AXnwCHxxgtCR+7hOPWr05LFuzHHexRYrEiezIlTXg=
+github.com/go-python/gopy v0.4.11-0.20260602125840-72557f647208 h1:VaYSRAnQPJQnXB4ZFy3WIoCRJ3tC+jnJbVsUmVNhOYE=
+github.com/go-python/gopy v0.4.11-0.20260602125840-72557f647208/go.mod h1:t4AXnwCHxxgtCR+7hOPWr05LFuzHHexRYrEiezIlTXg=
 github.com/gonuts/commander v0.1.0 h1:EcDTiVw9oAVORFjQOEOuHQqcl6OXMyTgELocTq6zJ0I=
 github.com/gonuts/commander v0.1.0/go.mod h1:qkb5mSlcWodYgo7vs8ulLnXhfinhZsZcm6+H/z1JjgY=
 github.com/gonuts/flag v0.1.0 h1:fqMv/MZ+oNGu0i9gp0/IQ/ZaPIDoAZBOBaJoV7viCWM=

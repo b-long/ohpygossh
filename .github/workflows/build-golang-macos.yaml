@@ -65,7 +65,7 @@ jobs:
           CIBW_BEFORE_ALL_LINUX: |
             curl -o go.tar.gz https://dl.google.com/go/go1.24.3.linux-amd64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
-            go install github.com/go-python/gopy@3cac6178ee4426e9fe8d7405a885e109d0634499
+            go install github.com/go-python/gopy@72557f647208599c726c14dc9721a6c850d2e6d9
             go install golang.org/x/tools/cmd/goimports@latest
 
   build:
@@ -91,7 +91,7 @@ jobs:
               cache-dependency-path: go.sum
 
         - name: install gopy
-          run: go install github.com/go-python/gopy@3cac6178ee4426e9fe8d7405a885e109d0634499
+          run: go install github.com/go-python/gopy@72557f647208599c726c14dc9721a6c850d2e6d9
 
         - name: install goimports
           run: go install golang.org/x/tools/cmd/goimports@latest
@@ -105,7 +105,7 @@ jobs:
               cp setup_ci.py setup.py
 
         - name: install gopy
-          run: go install github.com/go-python/gopy@3cac6178ee4426e9fe8d7405a885e109d0634499
+          run: go install github.com/go-python/gopy@72557f647208599c726c14dc9721a6c850d2e6d9
 
         - name: install goimports
           run: go install golang.org/x/tools/cmd/goimports@latest

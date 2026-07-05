@@ -5,7 +5,7 @@ go 1.24.0
 require golang.org/x/crypto v0.45.0
 
 require (
-	github.com/go-python/gopy v0.4.11-0.20260529002920-3cac6178ee44
+	github.com/go-python/gopy v0.4.11-0.20260602125840-72557f647208
 	github.com/larstobi/go-multipass v1.3.0
 	github.com/pkg/sftp v1.13.10
 )
