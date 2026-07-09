@@ -1,5 +1,14 @@
 # Changelog
 
+## [0.5.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.4.0...ohpygossh-v0.5.0) (2026-07-09)
+
+
+### Features
+
+* support testing with LXD ([#68](https://github.com/b-long/ohpygossh/issues/68)) ([4995461](https://github.com/b-long/ohpygossh/commit/4995461e691df5971f8fb5dc4df7b92c6a17e651))
+* update to go 1.25 ([#73](https://github.com/b-long/ohpygossh/issues/73)) ([055932b](https://github.com/b-long/ohpygossh/commit/055932b878995ad066bcce68bba6148e17742f41))
+* update to latest gopy main (2026 June 02) ([#59](https://github.com/b-long/ohpygossh/issues/59)) ([d6c8cee](https://github.com/b-long/ohpygossh/commit/d6c8cee5643e575d11894f891453ba656194bbf3))
+
 ## [0.4.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.3.2...ohpygossh-v0.4.0) (2026-06-10)
 
 
