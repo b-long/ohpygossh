@@ -54,16 +54,29 @@ Download(ssh_server, ssh_user, private_key, "/remote/file.txt", "/local/file.txt
 
 ## Development
 
-⚠️ This section needs to be rewritten ⚠️
-
-### Build wheel
-
-The following steps should produce a wheel,
-located at `dist/ohpygossh-<version>-py3-none-any.whl`
+Development tasks are run with [`just`](https://github.com/casey/just), a
+cross-platform command runner. All targets work the same way on macOS and
+Linux; see the `Justfile` for the full list.
 
 ```bash
-./make_and_validate_script.sh
+# One-time setup: installs Go, Python, gopy, poetry, pre-commit, etc. (via Homebrew)
+just setup
+
+# Run linters (golangci-lint, ruff, codespell, ...)
+just lint
+
+# Run the Go test suite
+just test
+
+# Build and validate the wheel: dist/ohpygossh-<version>-py3-none-any.whl
+just build
+
+# Remove build artifacts and the virtual environment
+just clean
 ```
+
+`just setup` requires [Homebrew](https://brew.sh) to be installed first, since
+it's the one package manager available on both macOS and Linux.
 
 ### Naming
 

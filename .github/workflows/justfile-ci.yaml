@@ -1,0 +1,47 @@
+---
+name: Justfile -- setup / lint / test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+defaults:
+  run:
+    shell: bash
+
+permissions:
+  contents: read
+
+jobs:
+  just-targets:
+    name: just (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v7
+
+      # macos-latest runners ship with Homebrew preinstalled; Linux runners don't.
+      - name: Install Homebrew
+        if: runner.os == 'Linux'
+        run: |
+          NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+          echo "/home/linuxbrew/.linuxbrew/bin" >> "$GITHUB_PATH"
+
+      - name: Install just
+        run: brew install just
+
+      - name: just setup
+        run: just setup
+
+      - name: just lint
+        run: just lint
+
+      - name: just test
+        run: just test
