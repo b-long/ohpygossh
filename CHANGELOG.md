@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.6.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.5.0...ohpygossh-v0.6.0) (2026-07-22)
+
+
+### Features
+
+* improve Developer Experience ([#77](https://github.com/b-long/ohpygossh/issues/77)) ([62e36c7](https://github.com/b-long/ohpygossh/commit/62e36c763d631cc7d9b37abb52bd7aa52274012f))
+
 ## [0.5.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.4.0...ohpygossh-v0.5.0) (2026-07-09)
 
 
