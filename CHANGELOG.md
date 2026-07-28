@@ -1,5 +1,21 @@
 # Changelog
 
+## [0.6.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.5.0...ohpygossh-v0.6.0) (2026-07-28)
+
+
+### Features
+* improve Developer Experience ([#77](https://github.com/b-long/ohpygossh/issues/77)) ([62e36c7](https://github.com/b-long/ohpygossh/commit/62e36c763d631cc7d9b37abb52bd7aa52274012f))
+
+
+### Miscellaneous Chores
+
+* bump actions/checkout from 6 to 7 ([#70](https://github.com/b-long/ohpygossh/issues/70)) ([942574f](https://github.com/b-long/ohpygossh/commit/942574ff53ddc7ef23ddda86267a1caef707879d))
+* bump actions/setup-go from 5 to 7 ([#80](https://github.com/b-long/ohpygossh/issues/80)) ([b3aa5bd](https://github.com/b-long/ohpygossh/commit/b3aa5bd6ef11bb6651f5046ba6e9a89487a1ee61))
+* bump actions/setup-python from 6 to 7 ([#79](https://github.com/b-long/ohpygossh/issues/79)) ([b8005ff](https://github.com/b-long/ohpygossh/commit/b8005ffaed6130c483a8e9f53f3b5471ff3e24cb))
+* bump github.com/pkg/sftp from 1.13.10 to 1.13.11 ([#74](https://github.com/b-long/ohpygossh/issues/74)) ([bbfdbc0](https://github.com/b-long/ohpygossh/commit/bbfdbc034df0cdc82c2f6466c5a53ea799d3f1b8))
+* bump golang.org/x/crypto from 0.45.0 to 0.54.0 ([#75](https://github.com/b-long/ohpygossh/issues/75)) ([67f1441](https://github.com/b-long/ohpygossh/commit/67f1441b93e02d4e4e326cfe8ce7231218193455))
+
+
 ## [0.5.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.4.0...ohpygossh-v0.5.0) (2026-07-09)
 
 
