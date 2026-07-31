@@ -6,9 +6,10 @@
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
 # gopy's version is pinned in go.mod (as a Go 1.24+ tool dependency) and
-# managed there by Dependabot; every consumer derives it from go.mod so
-# there is exactly one place to bump.
-gopy_version := `go list -m -f '{{.Version}}' github.com/go-python/gopy`
+# managed there by Dependabot; every consumer derives it from go.mod at
+# recipe run-time (not parse-time -- `setup` is what installs Go, so a
+# top-level `:=` variable would need Go before it exists) so there is
+# exactly one place to bump.
 
 # Show available recipes
 default:
@@ -27,7 +28,8 @@ setup:
     brew install go python@3.11 poetry pre-commit golangci-lint
 
     echo "==> Installing gopy and goimports"
-    go install "github.com/go-python/gopy@{{ gopy_version }}"
+    GOPY_VERSION="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
+    go install "github.com/go-python/gopy@${GOPY_VERSION}"
     go install golang.org/x/tools/cmd/goimports@latest
 
     GOBIN="$(go env GOPATH)/bin"
@@ -76,10 +78,11 @@ ci: setup lint test
 gopy-version-check:
     #!/usr/bin/env bash
     set -euo pipefail
-    echo "gopy is pinned to: {{ gopy_version }}"
+    gopy_version="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
+    echo "gopy is pinned to: ${gopy_version}"
 
-    if [[ "{{ gopy_version }}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(0\.)?[0-9]{14}-[0-9a-f]{12}(\+incompatible)?$ ]]; then
-        echo "note: gopy is still pinned to an untagged commit ({{ gopy_version }})."
+    if [[ "${gopy_version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(0\.)?[0-9]{14}-[0-9a-f]{12}(\+incompatible)?$ ]]; then
+        echo "note: gopy is still pinned to an untagged commit (${gopy_version})."
         echo "      Check https://github.com/go-python/gopy/releases -- if a tagged"
         echo "      release now exists, run 'just gopy-version-bump' to switch."
     fi
@@ -90,9 +93,9 @@ gopy-version-check:
     fi
     echo "no stray hardcoded gopy pins found"
 
-# Bump gopy to the tip of its default branch, updating go.mod/go.sum (the single source of truth).
-# Uses @master rather than @latest because gopy's tags lag its default branch;
-# @latest would silently downgrade past commits this project relies on.
+# Bump gopy to the tip of its default branch (go.mod/go.sum are the source of truth)
 gopy-version-bump:
+    # @master, not @latest: gopy's tags lag its default branch, so @latest
+    # would silently downgrade past commits this project relies on.
     go get -tool github.com/go-python/gopy@master
     go mod tidy
