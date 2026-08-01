@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.6.1](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.6.0...ohpygossh-v0.6.1) (2026-08-01)
+
+
+### Bug Fixes
+
+* chores should be visible in the CHANGELOG ([#82](https://github.com/b-long/ohpygossh/issues/82)) ([f555d05](https://github.com/b-long/ohpygossh/commit/f555d0508472610d591270a34f0b3139227ab240))
+
+
+### Miscellaneous Chores
+
+* bump pypa/cibuildwheel from 4.1.0 to 4.1.1 ([#84](https://github.com/b-long/ohpygossh/issues/84)) ([0db9a45](https://github.com/b-long/ohpygossh/commit/0db9a4569544c03ead52ed007347aa1adc993a67))
+
 ## [0.6.0](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.5.0...ohpygossh-v0.6.0) (2026-07-28)
 
 
