@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.6.2](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.6.1...ohpygossh-v0.6.2) (2026-08-01)
+
+
+### Miscellaneous Chores
+
+* pin gopy version via go.mod tool directive ([#86](https://github.com/b-long/ohpygossh/issues/86)) ([cdd8c69](https://github.com/b-long/ohpygossh/commit/cdd8c69fa051f3cb2f3b9dd50694cad1285d1fc1))
+* run 'just gopy-version-bump' ([#89](https://github.com/b-long/ohpygossh/issues/89)) ([d39d7ee](https://github.com/b-long/ohpygossh/commit/d39d7ee2b14bebecf0e15838b2de777bfa336fd8))
+
 ## [0.6.1](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.6.0...ohpygossh-v0.6.1) (2026-08-01)
 
 
