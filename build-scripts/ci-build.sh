@@ -48,7 +48,7 @@ echo "export PATH=$PATH:~/.local/go/bin" >> $GITHUB_ENV
 
 go install golang.org/x/tools/cmd/goimports@latest
 
-go install github.com/go-python/gopy@latest
+go install "github.com/go-python/gopy@$(go list -m -f '{{.Version}}' github.com/go-python/gopy)"
 
 poetry run pip install --upgrade setuptools wheel
 

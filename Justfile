@@ -5,8 +5,11 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# Pin to the same gopy revision used in CI (see .github/workflows/*.yaml)
-gopy_rev := "72557f647208599c726c14dc9721a6c850d2e6d9"
+# gopy's version is pinned in go.mod (as a Go 1.24+ tool dependency) and
+# managed there by Dependabot; every consumer derives it from go.mod at
+# recipe run-time (not parse-time -- `setup` is what installs Go, so a
+# top-level `:=` variable would need Go before it exists) so there is
+# exactly one place to bump.
 
 # Show available recipes
 default:
@@ -25,7 +28,8 @@ setup:
     brew install go python@3.11 poetry pre-commit golangci-lint
 
     echo "==> Installing gopy and goimports"
-    go install "github.com/go-python/gopy@{{ gopy_rev }}"
+    GOPY_VERSION="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
+    go install "github.com/go-python/gopy@${GOPY_VERSION}"
     go install golang.org/x/tools/cmd/goimports@latest
 
     GOBIN="$(go env GOPATH)/bin"
@@ -69,3 +73,29 @@ clean:
 
 # Run everything CI runs: setup, lint, then test
 ci: setup lint test
+
+# Validate that gopy's pin is only sourced from go.mod (no stray hardcoded copies)
+gopy-version-check:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    gopy_version="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
+    echo "gopy is pinned to: ${gopy_version}"
+
+    if [[ "${gopy_version}" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-(0\.)?[0-9]{14}-[0-9a-f]{12}(\+incompatible)?$ ]]; then
+        echo "note: gopy is still pinned to an untagged commit (${gopy_version})."
+        echo "      Check https://github.com/go-python/gopy/releases -- if a tagged"
+        echo "      release now exists, run 'just gopy-version-bump' to switch."
+    fi
+
+    if grep -RInE 'gopy@[0-9a-f]{40}' --include='*.yaml' --include='*.yml' --include='*.sh' .github build-scripts Justfile; then
+        echo "error: found a hardcoded gopy commit pin outside go.mod; derive it from go.mod instead" >&2
+        exit 1
+    fi
+    echo "no stray hardcoded gopy pins found"
+
+# Bump gopy to the tip of its default branch (go.mod/go.sum are the source of truth)
+gopy-version-bump:
+    # @master, not @latest: gopy's tags lag its default branch, so @latest
+    # would silently downgrade past commits this project relies on.
+    go get -tool github.com/go-python/gopy@master
+    go mod tidy
