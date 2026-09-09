@@ -5,11 +5,20 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# gopy's version is pinned in go.mod (as a Go 1.24+ tool dependency) and
-# managed there by Dependabot; every consumer derives it from go.mod at
-# recipe run-time (not parse-time -- `setup` is what installs Go, so a
-# top-level `:=` variable would need Go before it exists) so there is
-# exactly one place to bump.
+# gopy and goimports versions are pinned in go.mod (as Go 1.24+ tool
+# dependencies) and managed there by Dependabot; every consumer derives them
+# from go.mod at recipe run-time (not parse-time -- `setup` is what installs
+# Go, so a top-level `:=` variable would need Go before it exists) so there
+# is exactly one place to bump each.
+#
+# Go itself is pinned to the go@1.25 Homebrew formula (matching go.mod's `go
+# 1.25.0` and the Go version CI pins via actions/setup-go) rather than the
+# rolling `go` formula. go@1.25 is keg-only, so every recipe that shells out
+# to `go` (directly, or indirectly via pre-commit's golangci-lint hook, which
+# always builds golangci-lint from source against whatever `go` is on PATH)
+# must prepend its bin dir to PATH itself. Letting the rolling `go` formula
+# drift ahead (e.g. to 1.27) previously reintroduced a golangci-lint/
+# honnef.co/go/tools panic when linting this repo.
 
 # Show available recipes
 default:
@@ -24,18 +33,29 @@ setup:
         exit 1
     fi
 
-    echo "==> Installing Go, Python 3.11, poetry, pre-commit, golangci-lint"
-    brew install go python@3.11 poetry pre-commit golangci-lint
+    echo "==> Installing Go 1.25, Python 3.11, poetry, pre-commit"
+    # golangci-lint itself is not installed here: pre-commit builds it from the
+    # pinned rev in .pre-commit-config.yaml, so a separate system copy would
+    # only drift out of sync with that pin.
+    brew install go@1.25 python@3.11 poetry pre-commit
+    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
 
     echo "==> Installing gopy and goimports"
     GOPY_VERSION="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
     go install "github.com/go-python/gopy@${GOPY_VERSION}"
-    go install golang.org/x/tools/cmd/goimports@latest
+    GOIMPORTS_VERSION="$(go list -m all | awk '$1 == "golang.org/x/tools" {print $2}')"
+    go install "golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION}"
 
     GOBIN="$(go env GOPATH)/bin"
     case ":$PATH:" in
         *":$GOBIN:"*) ;;
         *) echo "warning: $GOBIN is not on your PATH; add it to use gopy/goimports directly" >&2 ;;
+    esac
+
+    GO125_BIN="$(brew --prefix go@1.25)/bin"
+    case ":$PATH:" in
+        *":$GO125_BIN:"*) ;;
+        *) echo "note: $GO125_BIN is not on your PATH; every 'just' recipe adds it itself, but add it yourself to run 'go' or 'golangci-lint' directly" >&2 ;;
     esac
 
     echo "==> Configuring the Python virtual environment"
@@ -49,11 +69,17 @@ setup:
 
 # Run Go and Python linters (same checks as CI)
 lint:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
     go get .
     pre-commit run --all-files
 
 # Run the Go test suite
 test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
     go test ./...
 
 # Build and validate the Python wheel (produces dist/ohpygossh-*.whl)
@@ -61,6 +87,9 @@ test:
 # CGO_ENABLED=1 is required for gopy's c-shared build and isn't always the
 # default (e.g. on some Linux/arm64 toolchains); see build-golang-macos.yaml.
 build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
     CGO_ENABLED=1 ./make_and_validate_script.sh
 
 # Re-validate an already-built wheel without rebuilding it

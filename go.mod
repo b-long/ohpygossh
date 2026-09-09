@@ -21,4 +21,7 @@ require (
 	golang.org/x/tools v0.29.0 // indirect
 )
 
-tool github.com/go-python/gopy
+tool (
+	github.com/go-python/gopy
+	golang.org/x/tools/cmd/goimports
+)
