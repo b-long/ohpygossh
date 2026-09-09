@@ -24,8 +24,11 @@ setup:
         exit 1
     fi
 
-    echo "==> Installing Go, Python 3.11, poetry, pre-commit, golangci-lint"
-    brew install go python@3.11 poetry pre-commit golangci-lint
+    echo "==> Installing Go, Python 3.11, poetry, pre-commit"
+    # golangci-lint itself is not installed here: pre-commit builds it from the
+    # pinned rev in .pre-commit-config.yaml, so a separate system copy would
+    # only drift out of sync with that pin.
+    brew install go python@3.11 poetry pre-commit
 
     echo "==> Installing gopy and goimports"
     GOPY_VERSION="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"

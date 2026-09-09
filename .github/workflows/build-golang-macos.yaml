@@ -34,8 +34,6 @@ jobs:
         uses: actions/setup-python@v7
         with:
           python-version: '3.11'
-      - name: Install pre-commit dependencies
-        run: go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
       - uses: pre-commit/action@v3.0.1
 
   build-linux:
