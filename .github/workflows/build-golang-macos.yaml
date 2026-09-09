@@ -66,7 +66,7 @@ jobs:
             curl -o go.tar.gz https://dl.google.com/go/go1.25.12.linux-amd64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
             go install "github.com/go-python/gopy@$(go list -m -f '{{.Version}}' github.com/go-python/gopy)"
-            go install golang.org/x/tools/cmd/goimports@latest
+            go install "golang.org/x/tools/cmd/goimports@$(go list -m -f '{{.Version}}' golang.org/x/tools)"
 
   build:
     runs-on: macos-latest
@@ -94,7 +94,7 @@ jobs:
           run: go install "github.com/go-python/gopy@$(go list -m -f '{{.Version}}' github.com/go-python/gopy)"
 
         - name: install goimports
-          run: go install golang.org/x/tools/cmd/goimports@latest
+          run: go install "golang.org/x/tools/cmd/goimports@$(go list -m -f '{{.Version}}' golang.org/x/tools)"
 
         - name: Test with Go
           run: go test
@@ -108,7 +108,7 @@ jobs:
           run: go install "github.com/go-python/gopy@$(go list -m -f '{{.Version}}' github.com/go-python/gopy)"
 
         - name: install goimports
-          run: go install golang.org/x/tools/cmd/goimports@latest
+          run: go install "golang.org/x/tools/cmd/goimports@$(go list -m -f '{{.Version}}' golang.org/x/tools)"
 
         - name: install python 3.${{ matrix.python3_version }}
           run: |

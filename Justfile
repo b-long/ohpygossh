@@ -5,11 +5,11 @@
 
 set shell := ["bash", "-euo", "pipefail", "-c"]
 
-# gopy's version is pinned in go.mod (as a Go 1.24+ tool dependency) and
-# managed there by Dependabot; every consumer derives it from go.mod at
-# recipe run-time (not parse-time -- `setup` is what installs Go, so a
-# top-level `:=` variable would need Go before it exists) so there is
-# exactly one place to bump.
+# gopy and goimports versions are pinned in go.mod (as Go 1.24+ tool
+# dependencies) and managed there by Dependabot; every consumer derives them
+# from go.mod at recipe run-time (not parse-time -- `setup` is what installs
+# Go, so a top-level `:=` variable would need Go before it exists) so there
+# is exactly one place to bump each.
 
 # Show available recipes
 default:
@@ -30,7 +30,8 @@ setup:
     echo "==> Installing gopy and goimports"
     GOPY_VERSION="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
     go install "github.com/go-python/gopy@${GOPY_VERSION}"
-    go install golang.org/x/tools/cmd/goimports@latest
+    GOIMPORTS_VERSION="$(go list -m all | awk '$1 == "golang.org/x/tools" {print $2}')"
+    go install "golang.org/x/tools/cmd/goimports@${GOIMPORTS_VERSION}"
 
     GOBIN="$(go env GOPATH)/bin"
     case ":$PATH:" in
