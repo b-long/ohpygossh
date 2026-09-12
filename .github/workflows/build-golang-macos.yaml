@@ -20,7 +20,7 @@ jobs:
       fail-fast: true
       matrix:
         os: [macos-latest, ubuntu-22.04]
-        go-version: [1.25.x]
+        go-version: [1.26.x]
     steps:
       - uses: actions/checkout@v7
       - name: Setup Go
@@ -61,7 +61,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/usr/local/go/bin
           CIBW_BEFORE_ALL_LINUX: |
-            curl -o go.tar.gz https://dl.google.com/go/go1.25.12.linux-amd64.tar.gz
+            curl -o go.tar.gz https://dl.google.com/go/go1.26.8.linux-amd64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
             go install "github.com/go-python/gopy@$(go list -m -f '{{.Version}}' github.com/go-python/gopy)"
             go install "golang.org/x/tools/cmd/goimports@$(go list -m -f '{{.Version}}' golang.org/x/tools)"
@@ -74,7 +74,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        go-version: [1.25.x]
+        go-version: [1.26.x]
         python3_version: [ 11, 12 ]
         arch_cibw_go:
           - [ "x86_64", "amd64" ]

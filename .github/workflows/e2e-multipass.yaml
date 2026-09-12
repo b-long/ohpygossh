@@ -36,7 +36,7 @@ jobs:
           CIBW_ENVIRONMENT: >
             PATH=$PATH:/usr/local/go/bin
           CIBW_BEFORE_ALL_LINUX: |
-            curl -o go.tar.gz https://dl.google.com/go/go1.25.12.linux-amd64.tar.gz
+            curl -o go.tar.gz https://dl.google.com/go/go1.26.8.linux-amd64.tar.gz
             tar -C /usr/local -xzf go.tar.gz
             go install "github.com/go-python/gopy@$(go list -m -f '{{.Version}}' github.com/go-python/gopy)"
             go install "golang.org/x/tools/cmd/goimports@$(go list -m -f '{{.Version}}' golang.org/x/tools)"
