@@ -11,9 +11,9 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 # Go, so a top-level `:=` variable would need Go before it exists) so there
 # is exactly one place to bump each.
 #
-# Go itself is pinned to the go@1.25 Homebrew formula (matching go.mod's `go
-# 1.25.0` and the Go version CI pins via actions/setup-go) rather than the
-# rolling `go` formula. go@1.25 is keg-only, so every recipe that shells out
+# Go itself is pinned to the go@1.26 Homebrew formula (matching go.mod's `go
+# 1.26.0` and the Go version CI pins via actions/setup-go) rather than the
+# rolling `go` formula. go@1.26 is keg-only, so every recipe that shells out
 # to `go` (directly, or indirectly via pre-commit's golangci-lint hook, which
 # always builds golangci-lint from source against whatever `go` is on PATH)
 # must prepend its bin dir to PATH itself. Letting the rolling `go` formula
@@ -33,12 +33,12 @@ setup:
         exit 1
     fi
 
-    echo "==> Installing Go 1.25, Python 3.11, poetry, pre-commit"
+    echo "==> Installing Go 1.26, Python 3.11, poetry, pre-commit"
     # golangci-lint itself is not installed here: pre-commit builds it from the
     # pinned rev in .pre-commit-config.yaml, so a separate system copy would
     # only drift out of sync with that pin.
-    brew install go@1.25 python@3.11 poetry pre-commit
-    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
+    brew install go@1.26 python@3.11 poetry pre-commit
+    export PATH="$(brew --prefix go@1.26)/bin:$PATH"
 
     echo "==> Installing gopy and goimports"
     GOPY_VERSION="$(go list -m all | awk '$1 == "github.com/go-python/gopy" {print $2}')"
@@ -52,7 +52,7 @@ setup:
         *) echo "warning: $GOBIN is not on your PATH; add it to use gopy/goimports directly" >&2 ;;
     esac
 
-    GO125_BIN="$(brew --prefix go@1.25)/bin"
+    GO125_BIN="$(brew --prefix go@1.26)/bin"
     case ":$PATH:" in
         *":$GO125_BIN:"*) ;;
         *) echo "note: $GO125_BIN is not on your PATH; every 'just' recipe adds it itself, but add it yourself to run 'go' or 'golangci-lint' directly" >&2 ;;
@@ -71,7 +71,7 @@ setup:
 lint:
     #!/usr/bin/env bash
     set -euo pipefail
-    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
+    export PATH="$(brew --prefix go@1.26)/bin:$PATH"
     go get .
     pre-commit run --all-files
 
@@ -79,7 +79,7 @@ lint:
 test:
     #!/usr/bin/env bash
     set -euo pipefail
-    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
+    export PATH="$(brew --prefix go@1.26)/bin:$PATH"
     go test ./...
 
 # Build and validate the Python wheel (produces dist/ohpygossh-*.whl)
@@ -89,7 +89,7 @@ test:
 build:
     #!/usr/bin/env bash
     set -euo pipefail
-    export PATH="$(brew --prefix go@1.25)/bin:$PATH"
+    export PATH="$(brew --prefix go@1.26)/bin:$PATH"
     CGO_ENABLED=1 ./make_and_validate_script.sh
 
 # Re-validate an already-built wheel without rebuilding it
