@@ -1,5 +1,26 @@
 # Changelog
 
+## [0.7.0](https://github.com/MooseTheRebel/ohpygossh/compare/ohpygossh-v0.6.2...ohpygossh-v0.7.0) (2026-09-13)
+
+
+### Features
+
+* bump all infra & configuration to go 1.26 ([#101](https://github.com/MooseTheRebel/ohpygossh/issues/101)) ([3b1cd06](https://github.com/MooseTheRebel/ohpygossh/commit/3b1cd060e36319063e2ea6f32c55d56838d1c18a))
+
+
+### Bug Fixes
+
+* Go and golangci-lint version drift across CI ([#95](https://github.com/MooseTheRebel/ohpygossh/issues/95)) ([5b64291](https://github.com/MooseTheRebel/ohpygossh/commit/5b642914b0ef6ce020bb62e4e4c23e2b4a131a3f))
+* remove .python-version file ([c58679f](https://github.com/MooseTheRebel/ohpygossh/commit/c58679fe7f3fbc6ebd30b479e34e56383fd2931c))
+* remove .python-version file ([474683d](https://github.com/MooseTheRebel/ohpygossh/commit/474683dca7d1309dc20e7f0acb033081d1caca0f))
+
+
+### Miscellaneous Chores
+
+* bump golang.org/x/crypto from 0.54.0 to 0.55.0 ([#91](https://github.com/MooseTheRebel/ohpygossh/issues/91)) ([a0ef873](https://github.com/MooseTheRebel/ohpygossh/commit/a0ef873611442504e470b783c15fd4009985e257))
+* bump golang.org/x/crypto from 0.55.0 to 0.57.0 ([#96](https://github.com/MooseTheRebel/ohpygossh/issues/96)) ([e100753](https://github.com/MooseTheRebel/ohpygossh/commit/e100753fa5e40e774140b2d3784b7ddc4fdc735b))
+* bump wheel from 0.47.0 to 0.48.0 ([#92](https://github.com/MooseTheRebel/ohpygossh/issues/92)) ([4eed647](https://github.com/MooseTheRebel/ohpygossh/commit/4eed6472290813a6d2cd6a0dcb503fa6b92ae795))
+
 ## [0.6.2](https://github.com/b-long/ohpygossh/compare/ohpygossh-v0.6.1...ohpygossh-v0.6.2) (2026-08-01)
 
 
